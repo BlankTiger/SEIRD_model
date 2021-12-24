@@ -1,0 +1,11 @@
+# created by virtualenv automatically
+Lib
+Scripts
+share
+__pycache__
+pyvenv.cfg
+.vscode
+build
+Include
+.pytest_cache
+model.spec
