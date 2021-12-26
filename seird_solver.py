@@ -3,7 +3,10 @@ from utils.model_equations import SEIRD
 from utils.example_coefficient_matrices import (
     sweden_coefficients as sweden_coeff,
 )
-from utils.example_contact_matrices import sweden_contact_matrix
+from utils.example_contact_matrices import (
+    sweden_contact_matrix,
+    mozambique_contact_matrix,
+)
 
 
 def sum_m_contact_nm_times_I_m(contact_nm, I_m):
@@ -143,7 +146,7 @@ y0 = np.matrix(
 )
 y0_big = np.matrix(
     [
-        [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000],
+        [10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000],
         [0, 0, 0, 0, 0, 0, 0, 0],
         [100, 0, 0, 0, 0, 0, 0, 0],
         [0, 10, 0, 0, 0, 0, 0, 0],
@@ -154,19 +157,57 @@ y0_big = np.matrix(
 
 
 solutions = solve(
-    SEIRD, (0, 300), y0_big, sweden_coeff, sweden_contact_matrix, 0.1
+    SEIRD, (0, 100), y0_big, sweden_coeff, sweden_contact_matrix, 0.1
 )
 
 
 import matplotlib.pyplot as plt
 
-fig, axs = plt.subplots(8, 6, sharex=True)
-axs.flatten()
-fig.set_size_inches(19, 19)
-plt.autoscale()
+
+# compare each age group's solutions to 6 diff eqs
+fig, axs = plt.subplots(
+    3,
+    2,
+    sharex=True,
+    gridspec_kw={"height_ratios": [1.5, 1.5, 1.5], "hspace": 0.1},
+)
+labels = [
+    [f"S$_{i}$" for i in range(1, 9)],
+    [f"E$_{i}$" for i in range(1, 9)],
+    [r"I$_{s," + str(i) + r"}$" for i in range(1, 9)],
+    [r"I$_{a," + str(i) + r"}$" for i in range(1, 9)],
+    [f"R$_{i}$" for i in range(1, 9)],
+    [f"D$_{i}$" for i in range(1, 9)],
+]
 for i in range(8):
-    for j in range(6):
-        axs[i, j].plot(solutions[0], solutions[j + 1][:, i])
-plt.tight_layout()
-plt.savefig("sweden_SEIRD.png", bbox_inches="tight")
-print(solutions[1].shape)
+    axs[0, 0].plot(solutions[0], solutions[1][:, i], label=labels[0][i])
+    axs[0, 1].plot(solutions[0], solutions[2][:, i], label=labels[1][i])
+    axs[1, 0].plot(solutions[0], solutions[3][:, i], label=labels[2][i])
+    axs[1, 1].plot(solutions[0], solutions[4][:, i], label=labels[3][i])
+    axs[2, 0].plot(solutions[0], solutions[5][:, i], label=labels[4][i])
+    axs[2, 1].plot(solutions[0], solutions[6][:, i], label=labels[5][i])
+for i in range(3):
+    for j in range(2):
+        axs[i, j].legend(
+            fontsize="small",
+            loc="upper right",
+            ncol=2,
+            fancybox=True,
+            shadow=True,
+            borderpad=0.5,
+            frameon=True,
+        )
+        axs[i, j].set_xlabel("Time")
+        axs[i, j].set_ylabel("Population")
+plt.show()
+
+# One way to plot solutions in a 8x6 grid
+# fig, axs = plt.subplots(8, 6, sharex=True)
+# axs.flatten()
+# fig.set_size_inches(19, 19)
+# plt.autoscale()
+# for i in range(8):
+#     for j in range(6):
+#         axs[i, j].plot(solutions[0], solutions[j + 1][:, i])
+# plt.tight_layout()
+# plt.savefig("sweden_SEIRD.png", bbox_inches="tight")
