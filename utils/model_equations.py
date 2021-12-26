@@ -27,6 +27,9 @@ def SEIRD(
             between age group n and m and the number of infected people in age
             group m.
 
+    Returns:
+
+
     """
 
     S_n, E_n, I_sn, I_an, R_n, D_n = y
