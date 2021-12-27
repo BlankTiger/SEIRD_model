@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from utils.model_equations import SEIRD
 from utils.example_coefficient_matrices import (
     sweden_coefficients as sweden_coeff,
@@ -7,10 +8,6 @@ from utils.example_contact_matrices import (
     sweden_contact_matrix,
     mozambique_contact_matrix,
 )
-
-
-def sum_m_contact_nm_times_I_m(contact_nm, I_m):
-    return contact_nm.dot(I_m)
 
 
 def solve(f, time_range, y0, coeff, contact_matrix, dt):
@@ -50,13 +47,12 @@ def solve(f, time_range, y0, coeff, contact_matrix, dt):
                     Ia[t, i],
                     R[t, i],
                     D[t, i],
-                ]
+                ],
             )
-            # implement the sum argument
-            sum_contact_Im = sum_m_contact_nm_times_I_m(
-                np.squeeze(np.asarray(contact_matrix[i, :])).T,
-                Is[t, :] + Ia[t, :],
-            )
+            sum_contact_Im = np.squeeze(
+                np.asarray(contact_matrix[i, :])
+            ).T.dot(Is[t, :] + Ia[t, :])
+
             k1 = np.array(
                 f(
                     t,
@@ -69,7 +65,7 @@ def solve(f, time_range, y0, coeff, contact_matrix, dt):
                     gamma_a[0, i],
                     delta[0, i],
                     sum_contact_Im,
-                )
+                ),
             )
             k2 = np.array(
                 f(
@@ -83,7 +79,7 @@ def solve(f, time_range, y0, coeff, contact_matrix, dt):
                     gamma_a[0, i],
                     delta[0, i],
                     sum_contact_Im,
-                )
+                ),
             )
             k3 = np.array(
                 f(
@@ -97,7 +93,7 @@ def solve(f, time_range, y0, coeff, contact_matrix, dt):
                     gamma_a[0, i],
                     delta[0, i],
                     sum_contact_Im,
-                )
+                ),
             )
             k4 = np.array(
                 f(
@@ -111,9 +107,9 @@ def solve(f, time_range, y0, coeff, contact_matrix, dt):
                     gamma_a[0, i],
                     delta[0, i],
                     sum_contact_Im,
-                )
+                ),
             )
-            new_y = prev_y + dt / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
+            new_y = prev_y + (dt / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)
             S[t + 1, i] = new_y[0]
             E[t + 1, i] = new_y[1]
             Is[t + 1, i] = new_y[2]
@@ -146,10 +142,38 @@ y0 = np.matrix(
 )
 y0_big = np.matrix(
     [
-        [10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000],
+        [
+            1400000,
+            1800000,
+            1250000,
+            1500000,
+            1200000,
+            1250000,
+            1250000,
+            2000000,
+        ],
         [0, 0, 0, 0, 0, 0, 0, 0],
-        [100, 0, 0, 0, 0, 0, 0, 0],
-        [0, 10, 0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+    ]
+)
+y0_big_1 = np.matrix(
+    [
+        [
+            140000,
+            180000,
+            125000,
+            150000,
+            120000,
+            125000,
+            125000,
+            200000,
+        ],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0],
     ]
@@ -161,16 +185,16 @@ solutions = solve(
 )
 
 
-import matplotlib.pyplot as plt
-
-
 # compare each age group's solutions to 6 diff eqs
 fig, axs = plt.subplots(
     3,
     2,
     sharex=True,
-    gridspec_kw={"height_ratios": [1.5, 1.5, 1.5], "hspace": 0.1},
+    gridspec_kw={"height_ratios": [1.5, 1.5, 1.5], "hspace": 0.15},
 )
+plt.gcf()
+plt.style.use("fivethirtyeight")
+plt.rcParams.update({"font.size": 9})
 labels = [
     [f"S$_{i}$" for i in range(1, 9)],
     [f"E$_{i}$" for i in range(1, 9)],
@@ -190,24 +214,28 @@ for i in range(3):
     for j in range(2):
         axs[i, j].legend(
             fontsize="small",
-            loc="upper right",
             ncol=2,
             fancybox=True,
             shadow=True,
             borderpad=0.5,
             frameon=True,
         )
-        axs[i, j].set_xlabel("Time")
+        axs[i, j].ticklabel_format(axis="y", useOffset=False, style="plain")
+        axs[i, j].set_xlabel("Time [days]")
         axs[i, j].set_ylabel("Population")
 plt.show()
 
 # One way to plot solutions in a 8x6 grid
 # fig, axs = plt.subplots(8, 6, sharex=True)
+# plt.gcf()
+# plt.style.use("fivethirtyeight")
+# plt.rcParams.update({"font.size": 9})
 # axs.flatten()
 # fig.set_size_inches(19, 19)
 # plt.autoscale()
 # for i in range(8):
 #     for j in range(6):
 #         axs[i, j].plot(solutions[0], solutions[j + 1][:, i])
+#         axs[i, j].ticklabel_format(axis="y", useOffset=False, style="plain")
 # plt.tight_layout()
-# plt.savefig("sweden_SEIRD.png", bbox_inches="tight")
+# plt.savefig("sweden_SEIRD.pdf", bbox_inches="tight")

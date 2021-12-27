@@ -9,22 +9,14 @@ import numpy as np
 # 4: 40-50
 # 5: 50-60
 # 6: 60-70
-# 7: 70-80
-
-beta_by_age_group = np.array(
-    [0.25e-4, 0.25e-4, 0.25e-4, 0.25e-4, 0.25e-4, 0.25e-4, 0.25e-4, 0.25e-4]
-)
-sigma_by_age_group = np.array([1, 1, 1, 1, 1, 1, 1, 1])
-epsilon_by_age_group = np.array(
-    [0.18, 0.18, 0.18, 0.18, 0.18, 0.18, 0.18, 0.18]
-)
-f_s_by_age_group = np.array([0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6])
-gamma_s_by_age_group = np.array(
-    [0.07, 0.07, 0.07, 0.07, 0.07, 0.07, 0.07, 0.07]
-)
-gamma_a_by_age_group = np.array(
-    [0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02]
-)
+# 7: 70-
+range_8 = range(8)
+beta_by_age_group = np.array([0.25e-6 for _ in range_8])
+sigma_by_age_group = np.array([1 for _ in range_8])
+epsilon_by_age_group = np.array([0.18 for _ in range_8])
+f_s_by_age_group = np.array([0.6 for _ in range_8])
+gamma_s_by_age_group = np.array([0.07 for _ in range_8])
+gamma_a_by_age_group = np.array([0.06 for _ in range_8])
 delta_by_age_group = np.array(
     [0.0017, 0.0000, 0.0007, 0.0012, 0.0031, 0.0105, 0.0459, 0.3253]
 )
@@ -38,5 +30,6 @@ sweden_coefficients = np.matrix(
         gamma_s_by_age_group,
         gamma_a_by_age_group,
         delta_by_age_group,
-    ]
+    ],
+    dtype=np.float64,
 )

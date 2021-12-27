@@ -1,3 +1,6 @@
+from numpy import array
+
+
 def SEIRD(
     t,
     y,
@@ -31,15 +34,22 @@ def SEIRD(
 
 
     """
-
     S_n, E_n, I_sn, I_an, R_n, D_n = y
 
-    Sn = -beta_n * sigma_n * S_n * sum_m_contact_nm_times_I_m
-    En = beta_n * sigma_n * S_n * sum_m_contact_nm_times_I_m - sigma_n * E_n
-    Isn = epsilon_n * f_sn * E_n - (gamma_sn + delta_n) * I_sn
-    Ian = epsilon_n * (1 - f_sn) * E_n - gamma_an * I_an
-    Rn = gamma_an * I_an + gamma_sn * I_sn
-    Dn = delta_n * I_sn
+    dIsndt = epsilon_n * f_sn * E_n - (gamma_sn + delta_n) * I_sn
+    dIandt = epsilon_n * (1 - f_sn) * E_n - gamma_an * I_an
+    dRndt = gamma_an * I_an + gamma_sn * I_sn
+    dDndt = delta_n * I_sn
 
-    dydt = [Sn, En, Isn, Ian, Rn, Dn]
-    return dydt
+    if S_n - beta_n * sigma_n * S_n * sum_m_contact_nm_times_I_m > 0:
+        dSndt = -beta_n * sigma_n * S_n * sum_m_contact_nm_times_I_m
+        dEndt = (
+            beta_n * sigma_n * S_n * sum_m_contact_nm_times_I_m
+            - epsilon_n * E_n
+        )
+        return array([dSndt, dEndt, dIsndt, dIandt, dRndt, dDndt])
+
+    dSndt = -S_n
+    dEndt = S_n - epsilon_n * E_n
+
+    return array([dSndt, dEndt, dIsndt, dIandt, dRndt, dDndt])
