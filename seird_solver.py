@@ -181,7 +181,7 @@ y0_big_1 = np.matrix(
 
 
 solutions = solve(
-    SEIRD, (0, 100), y0_big, sweden_coeff, sweden_contact_matrix, 0.1
+    SEIRD, (0, 50), y0_big, sweden_coeff, sweden_contact_matrix, 0.1
 )
 
 
@@ -204,12 +204,12 @@ labels = [
     [f"D$_{i}$" for i in range(1, 9)],
 ]
 for i in range(8):
-    axs[0, 0].plot(solutions[0], solutions[1][:, i], label=labels[0][i])
-    axs[0, 1].plot(solutions[0], solutions[2][:, i], label=labels[1][i])
-    axs[1, 0].plot(solutions[0], solutions[3][:, i], label=labels[2][i])
-    axs[1, 1].plot(solutions[0], solutions[4][:, i], label=labels[3][i])
-    axs[2, 0].plot(solutions[0], solutions[5][:, i], label=labels[4][i])
-    axs[2, 1].plot(solutions[0], solutions[6][:, i], label=labels[5][i])
+    axs[0, 0].plot(solutions[0], solutions[1][:, i], label=labels[0][i], lw=1)
+    axs[0, 1].plot(solutions[0], solutions[2][:, i], label=labels[1][i], lw=1)
+    axs[1, 0].plot(solutions[0], solutions[3][:, i], label=labels[2][i], lw=1)
+    axs[1, 1].plot(solutions[0], solutions[4][:, i], label=labels[3][i], lw=1)
+    axs[2, 0].plot(solutions[0], solutions[5][:, i], label=labels[4][i], lw=1)
+    axs[2, 1].plot(solutions[0], solutions[6][:, i], label=labels[5][i], lw=1)
 for i in range(3):
     for j in range(2):
         axs[i, j].legend(
@@ -223,6 +223,13 @@ for i in range(3):
         axs[i, j].ticklabel_format(axis="y", useOffset=False, style="plain")
         axs[i, j].set_xlabel("Time [days]")
         axs[i, j].set_ylabel("Population")
+plt.xticks(
+    np.arange(
+        min(solutions[0]),
+        55,
+        5,
+    )
+)
 plt.show()
 
 # One way to plot solutions in a 8x6 grid

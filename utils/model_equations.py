@@ -22,13 +22,13 @@ def SEIRD(
         beta_n (float): The infection rate.
         sigma_n (float): The recovery rate.
         epsilon_n (float): The self-quarantine rate.
-        f_sn (float): The fraction of infected people who are symptomatic.
-        gamma_sn (float): The recovery rate of symptomatic infected people.
-        gamma_an (float): The recovery rate of asymptomatic infected people.
-        delta_n (float): The death rate of symptomatic infected people.
+        f_sn (float): The fraction of infectious people who are symptomatic.
+        gamma_sn (float): The recovery rate of symptomatic infectious people.
+        gamma_an (float): The recovery rate of asymptomatic infectious people.
+        delta_n (float): The death rate of symptomatic infectious people.
         sum_m_contact_nm_times_I_m (float): The sum of a product of the contact
-            between age group n and m and the number of infected people in age
-            group m.
+            between age group n and m and the number of infectious people in
+            age group m.
 
     Returns:
 
