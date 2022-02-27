@@ -9,3 +9,6 @@ build
 Include
 .pytest_cache
 model.spec
+test.ipynb
+
+sweden_SEIRD.pdf

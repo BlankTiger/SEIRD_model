@@ -1,18 +1,29 @@
 from numpy import array
 
 
-def SEIRD(
-    t,
-    y,
-    beta_n,
-    sigma_n,
-    epsilon_n,
-    f_sn,
-    gamma_sn,
-    gamma_an,
-    delta_n,
-    sum_m_contact_nm_times_I_m,
-):
+class SEIRD_args:
+    def __init__(
+        self,
+        beta_n,
+        sigma_n,
+        epsilon_n,
+        f_sn,
+        gamma_sn,
+        gamma_an,
+        delta_n,
+        sum_m_contact_nm_times_I_m,
+    ):
+        self.beta_n = beta_n
+        self.sigma_n = sigma_n
+        self.epsilon_n = epsilon_n
+        self.f_sn = f_sn
+        self.gamma_sn = gamma_sn
+        self.gamma_an = gamma_an
+        self.delta_n = delta_n
+        self.sum_m_contact_nm_times_I_m = sum_m_contact_nm_times_I_m
+
+
+def SEIRD(t, y, c: SEIRD_args):
     """
     The SEIRD model.
 
@@ -36,20 +47,20 @@ def SEIRD(
     """
     S_n, E_n, I_sn, I_an, R_n, D_n = y
 
-    dIsndt = epsilon_n * f_sn * E_n - (gamma_sn + delta_n) * I_sn
-    dIandt = epsilon_n * (1 - f_sn) * E_n - gamma_an * I_an
-    dRndt = gamma_an * I_an + gamma_sn * I_sn
-    dDndt = delta_n * I_sn
+    dIsndt = c.epsilon_n * c.f_sn * E_n - (c.gamma_sn + c.delta_n) * I_sn
+    dIandt = c.epsilon_n * (1 - c.f_sn) * E_n - c.gamma_an * I_an
+    dRndt = c.gamma_an * I_an + c.gamma_sn * I_sn
+    dDndt = c.delta_n * I_sn
 
-    if S_n - beta_n * sigma_n * S_n * sum_m_contact_nm_times_I_m > 0:
-        dSndt = -beta_n * sigma_n * S_n * sum_m_contact_nm_times_I_m
+    if S_n - c.beta_n * c.sigma_n * S_n * c.sum_m_contact_nm_times_I_m > 0:
+        dSndt = -c.beta_n * c.sigma_n * S_n * c.sum_m_contact_nm_times_I_m
         dEndt = (
-            beta_n * sigma_n * S_n * sum_m_contact_nm_times_I_m
-            - epsilon_n * E_n
+            c.beta_n * c.sigma_n * S_n * c.sum_m_contact_nm_times_I_m
+            - c.epsilon_n * E_n
         )
         return array([dSndt, dEndt, dIsndt, dIandt, dRndt, dDndt])
 
     dSndt = -S_n
-    dEndt = S_n - epsilon_n * E_n
+    dEndt = S_n - c.epsilon_n * E_n
 
     return array([dSndt, dEndt, dIsndt, dIandt, dRndt, dDndt])
