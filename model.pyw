@@ -1,7 +1,7 @@
 import platform
 import PySimpleGUI as sg
 
-from utils.gui import layout
+from utils.gui import layout, layout_param, layout_stat
 from utils.mathematics import solve_SEIRD
 from utils.plots import plot_SEIRD
 from utils.example_coefficient_matrices import sweden_coefficients
@@ -56,6 +56,38 @@ window = sg.Window(
 
 # Insert initial figure into canvas
 fig_agg = draw_fig(window["-CANVAS-"].TKCanvas, fig, window["-TOOLBAR-"].TKCanvas)
+
+
+def show_param_window():
+    window = sg.Window(
+        title="Parameters",
+        layout=layout_param,
+        element_justification="c",
+        resizable=True,
+        finalize=True,
+    )
+    params = []
+
+    while True:
+        event, values = window.read()
+        if event in (None, "Exit"):
+            break
+        elif event == "-SAVE-":
+            params = window["-PARAMTAB-"].Values
+            print(params)
+        elif event == "-OKAY-":
+            pass
+
+
+def show_stat_window():
+    window = sg.Window(title="Statistics", layout=layout_stat, resizable=True)
+
+    while True:
+        event, values = window.read()
+        if event in (None, "Exit"):
+            break
+
+    return
 
 
 # Main loop
