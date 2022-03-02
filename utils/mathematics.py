@@ -1,14 +1,15 @@
 from . import model_equations
 import numpy as np
+from dataclasses import dataclass
 
 f = model_equations.SEIRD
 SEIRD_args = model_equations.SEIRD_args
 
 
+@dataclass
 class solution:
-    def __init__(self, t, y):
-        self.t = t
-        self.y = y
+    t: np.ndarray
+    y: np.ndarray
 
 
 def solve_SEIRD(time_range, y0, coeff, contact_matrix):

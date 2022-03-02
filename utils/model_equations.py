@@ -1,49 +1,22 @@
 from numpy import array
+from dataclasses import dataclass
 
 
+@dataclass
 class SEIRD_args:
-    def __init__(
-        self,
-        beta_n,
-        sigma_n,
-        epsilon_n,
-        f_sn,
-        gamma_sn,
-        gamma_an,
-        delta_n,
-        sum_m_contact_nm_times_I_m,
-    ):
-        self.beta_n = beta_n
-        self.sigma_n = sigma_n
-        self.epsilon_n = epsilon_n
-        self.f_sn = f_sn
-        self.gamma_sn = gamma_sn
-        self.gamma_an = gamma_an
-        self.delta_n = delta_n
-        self.sum_m_contact_nm_times_I_m = sum_m_contact_nm_times_I_m
+    beta_n: float
+    sigma_n: float
+    epsilon_n: float
+    f_sn: float
+    gamma_sn: float
+    gamma_an: float
+    delta_n: float
+    sum_m_contact_nm_times_I_m: float
 
 
 def SEIRD(t, y, c: SEIRD_args):
     """
     The SEIRD model.
-
-    Args:
-        t (float): The time.
-        y (list): The state variables.
-        beta_n (float): The infection rate.
-        sigma_n (float): The recovery rate.
-        epsilon_n (float): The self-quarantine rate.
-        f_sn (float): The fraction of infectious people who are symptomatic.
-        gamma_sn (float): The recovery rate of symptomatic infectious people.
-        gamma_an (float): The recovery rate of asymptomatic infectious people.
-        delta_n (float): The death rate of symptomatic infectious people.
-        sum_m_contact_nm_times_I_m (float): The sum of a product of the contact
-            between age group n and m and the number of infectious people in
-            age group m.
-
-    Returns:
-
-
     """
     S_n, E_n, I_sn, I_an, R_n, D_n = y
 

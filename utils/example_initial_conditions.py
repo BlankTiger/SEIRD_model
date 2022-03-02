@@ -29,7 +29,8 @@ y0_sweden = np.matrix(
         [0, 0, 0, 1, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0],
-    ]
+    ],
+    dtype=np.int64,
 )
 
 y0_sweden_smaller = np.matrix(

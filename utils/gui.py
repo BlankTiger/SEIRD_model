@@ -1,7 +1,6 @@
 import PySimpleGUI as sg
 
 
-with_vaccinations = False
 sg.theme("DarkGrey5")
 
 
@@ -131,106 +130,216 @@ from utils.example_coefficient_matrices import sweden_coefficients
 from utils.example_contact_matrices import sweden_contact_matrix
 import numpy as np
 
-y0_sweden = y0_sweden.astype(str)
-sweden_coefficients = sweden_coefficients.astype(str)
-sweden_contact_matrix = sweden_contact_matrix.astype(str)
+params = {
+    "-INITIALTAB-": y0_sweden,
+    "-PARAMTAB-": sweden_coefficients,
+    "-CONTACTTAB-": sweden_contact_matrix,
+}
+vac_parameters = {
+    "eff": 0.9,
+    "age_grp_1": [0, 0, 0],
+    "age_grp_2": [0, 0, 0],
+    "age_grp_3": [0, 0, 0],
+    "age_grp_4": [0, 0, 0],
+    "age_grp_5": [0, 0, 0],
+    "age_grp_6": [0, 0, 0],
+    "age_grp_7": [0, 0, 0],
+    "age_grp_8": [20000, 50, 70],
+}
 
-left_headings = np.array(
-    [
+
+layout = create_layout(column1, column2)
+
+
+def layout_param(parameters=params, vac_parameters=vac_parameters, with_vac=False):
+    vertical_scroll = True
+    y0_sweden = parameters["-INITIALTAB-"].astype(str)
+    sweden_coefficients = parameters["-PARAMTAB-"].astype(str)
+    sweden_contact_matrix = parameters["-CONTACTTAB-"].astype(str)
+
+    left_headings = np.array(
         [
-            "S(0)ₙ",
-            "E(0)ₙ",
-            "I(0)ₐ,ₙ",
-            "I(0)ₛ,ₙ",
-            "R(0)ₙ",
-            "D(0)ₙ",
+            [
+                "S(0)ₙ",
+                "E(0)ₙ",
+                "I(0)ₐ,ₙ",
+                "I(0)ₛ,ₙ",
+                "R(0)ₙ",
+                "D(0)ₙ",
+            ]
         ]
-    ]
-)
-y0_sweden = np.insert(y0_sweden, 0, left_headings, axis=1)
+    )
+    y0_sweden = np.insert(y0_sweden, 0, left_headings, axis=1)
 
-left_headings = np.array(
-    [
+    left_headings = np.array(
         [
-            "β ₙ",
-            "σ ₙ",
-            "ε ₙ",
-            "f ₛ,ₙ",
-            "γ ₛ,ₙ",
-            "γ ₐ,",
-            "δ ₙ",
+            [
+                "β ₙ",
+                "σ ₙ",
+                "ε ₙ",
+                "f ₛ,ₙ",
+                "γ ₛ,ₙ",
+                "γ ₐ,ₙ",
+                "δ ₙ",
+            ]
         ]
-    ]
-)
-sweden_coefficients = np.insert(sweden_coefficients, 0, left_headings, axis=1)
+    )
+    sweden_coefficients = np.insert(sweden_coefficients, 0, left_headings, axis=1)
 
-left_headings = np.array(
-    [
+    left_headings = np.array(
         [
-            "1",
-            "2",
-            "3",
-            "4",
-            "5",
-            "6",
-            "7",
-            "8",
+            [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+            ]
         ]
-    ]
-)
-sweden_contact_matrix = np.insert(sweden_contact_matrix, 0, left_headings, axis=1)
+    )
+    sweden_contact_matrix = np.insert(sweden_contact_matrix, 0, left_headings, axis=1)
 
-vertical_scroll = False
-initial_conditions_table = sg.Table(
-    y0_sweden.tolist(),
-    headings=["Parameter", "n=1", "n=2", "n=3", "n=4", "n=5", "n=6", "n=7", "n=8"],
-    hide_vertical_scroll=vertical_scroll,
-    row_height=35,
-    key="-INITIALTAB-",
-    num_rows=6,
-    expand_x=True,
-    font=(r"Helvetica 11"),
-)
+    def_col_width = 10
+    initial_conditions_table = sg.Table(
+        y0_sweden.tolist(),
+        headings=["Parameter", "n=1", "n=2", "n=3", "n=4", "n=5", "n=6", "n=7", "n=8"],
+        hide_vertical_scroll=vertical_scroll,
+        row_height=35,
+        def_col_width=def_col_width,
+        auto_size_columns=False,
+        key="-INITIALTAB-",
+        num_rows=6,
+        expand_x=True,
+        font=(r"Helvetica 11"),
+        enable_click_events=True,
+    )
 
-coefficient_table = sg.Table(
-    sweden_coefficients.tolist(),
-    headings=["Parameter", "n=1", "n=2", "n=3", "n=4", "n=5", "n=6", "n=7", "n=8"],
-    hide_vertical_scroll=vertical_scroll,
-    row_height=35,
-    key="-PARAMTAB-",
-    num_rows=7,
-    expand_x=True,
-    font=(r"Helvetica 11"),
-)
+    coefficient_table = sg.Table(
+        sweden_coefficients.tolist(),
+        headings=["Parameter", "n=1", "n=2", "n=3", "n=4", "n=5", "n=6", "n=7", "n=8"],
+        hide_vertical_scroll=vertical_scroll,
+        row_height=35,
+        def_col_width=def_col_width,
+        auto_size_columns=False,
+        key="-PARAMTAB-",
+        num_rows=7,
+        expand_x=True,
+        font=(r"Helvetica 11"),
+        enable_click_events=True,
+    )
 
-contact_table = sg.Table(
-    sweden_contact_matrix.tolist(),
-    headings=["n", "1", "2", "3", "4", "5", "6", "7", "8"],
-    hide_vertical_scroll=vertical_scroll,
-    row_height=35,
-    key="-CONTACTTAB-",
-    num_rows=8,
-    expand_x=True,
-    font=(r"Helvetica 11"),
-)
-param_buttons = sg.Column(
-    [[sg.Button("Save", key="-SAVE-", size=(12, 2))]], expand_x=True
-)
-
-main_frame = sg.Column(
-    [
+    contact_table = sg.Table(
+        sweden_contact_matrix.tolist(),
+        headings=["n", "1", "2", "3", "4", "5", "6", "7", "8"],
+        hide_vertical_scroll=vertical_scroll,
+        row_height=35,
+        def_col_width=def_col_width,
+        auto_size_columns=False,
+        key="-CONTACTTAB-",
+        num_rows=8,
+        expand_x=True,
+        font=(r"Helvetica 11"),
+        enable_click_events=True,
+    )
+    param_buttons = sg.Column(
+        [
+            [
+                sg.Checkbox(
+                    "Vaccinations on/off",
+                    default=with_vac,
+                    key="-WITH_VAC-",
+                    enable_events=True,
+                )
+            ],
+            [sg.Button("Save", key="-SAVE-", size=(12, 2))],
+        ],
+        expand_x=True,
+        element_justification="c",
+    )
+    layout = [
         [sg.Text("Initial conditions:"), create_stretch()],
         [initial_conditions_table],
         [sg.Text("Coefficients:"), create_stretch()],
         [coefficient_table],
         [sg.Text("Contact matrix:"), create_stretch()],
         [contact_table],
-    ],
-    element_justification="c",
-    expand_x=True,
-    expand_y=True,
-)
+    ]
+    main_frame = sg.Column(
+        layout,
+        element_justification="c",
+        expand_x=True,
+        expand_y=True,
+    )
 
-layout = create_layout(column1, column2)
-layout_param = create_layout(param_buttons, main_frame)
-layout_stat = create_layout()
+    vac_eff_text = create_col_for_row(sg.Text(text="Vaccination eff", size=(15, 1)))
+    vac_eff_value = create_col_for_row(
+        sg.InputText(
+            f"{vac_parameters['eff']}",
+            size=(20, 1),
+            justification="right",
+            key="vaccination_eff",
+            disabled=not with_vac,
+        )
+    )
+    vac_eff_row = create_row(vac_eff_text, create_stretch(), vac_eff_value, True)
+    vac_layout = [[sg.Text("Vaccination parameters: ")], [vac_eff_row]]
+    for i in range(1, 9):
+        rate = vac_parameters[f"age_grp_{i}"][0]
+        start = vac_parameters[f"age_grp_{i}"][1]
+        end = vac_parameters[f"age_grp_{i}"][2]
+        vac_rate_text = create_col_for_row(
+            sg.Text(text="Vaccination rate", size=(15, 1))
+        )
+        vac_rate_value = create_col_for_row(
+            sg.InputText(
+                f"{rate}",
+                size=(20, 1),
+                justification="right",
+                key=f"vaccination_rate_{i}",
+                disabled=not with_vac,
+            )
+        )
+        vac_rate_row = create_row(vac_rate_text, create_stretch(), vac_rate_value, True)
+        vac_start_text = create_col_for_row(
+            sg.Text(text="Vaccination start", size=(15, 1))
+        )
+        vac_start_value = create_col_for_row(
+            sg.InputText(
+                f"{start}",
+                size=(20, 1),
+                justification="right",
+                key=f"vaccination_start_{i}",
+                disabled=not with_vac,
+            )
+        )
+        vac_start_row = create_row(
+            vac_start_text, create_stretch(), vac_start_value, True
+        )
+        vac_end_text = create_col_for_row(sg.Text(text="Vaccination end", size=(15, 1)))
+        vac_end_value = create_col_for_row(
+            sg.InputText(
+                f"{end}",
+                size=(20, 1),
+                justification="right",
+                key=f"vaccination_end_{i}",
+                disabled=not with_vac,
+            )
+        )
+        vac_end_row = create_row(vac_end_text, create_stretch(), vac_end_value, True)
+
+        vac_group_text = sg.Text(text=f"Age group {i}", size=(15, 1))
+        vac_layout.append([vac_group_text])
+        vac_layout.append([vac_rate_row])
+        vac_layout.append([vac_start_row])
+        vac_layout.append([vac_end_row])
+    vac_layout = sg.Column(
+        vac_layout, element_justification="c", expand_x=True, expand_y=True
+    )
+    return create_layout(param_buttons, main_frame, vac_layout)
+
+
+def layout_stat():
+    return create_layout()
