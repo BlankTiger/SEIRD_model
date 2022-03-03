@@ -63,6 +63,15 @@ def create_layout(*elements):
     return [[*elements]]
 
 
+duration_text = sg.Text("Duration:", size=(12, 1), expand_x=True)
+duration_input = sg.InputText(
+    "100", key="-DURATION-", size=(12, 1), justification="right", expand_x=True
+)
+duration_text_row = create_row(duration_text, create_stretch(), create_stretch(), True)
+duration_input_row = create_row(
+    duration_input, create_stretch(), create_stretch(), True
+)
+
 param_row = create_row(
     create_stretch(),
     sg.Button("Parameters", key="-PARAM-", size=(12, 2), expand_x=True),
@@ -87,6 +96,9 @@ draw_row = create_row(
 
 column1 = sg.Column(
     [
+        [duration_text_row],
+        [duration_input_row],
+        [create_stretch()],
         [param_row],
         [create_stretch()],
         [stat_row],

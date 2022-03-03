@@ -61,17 +61,12 @@ def delete_figure_agg(figure_canvas_agg):
     figure_canvas_agg.get_tk_widget().pack_forget()
 
 
-def create_updated_fig_SEIRD():
-    sol = mat.solve_SEIRD()
+def create_updated_fig_SEIRD(t_1, params, params_vac=None):
+    y0 = params["-INITIALTAB-"]
+    coeff = params["-PARAMTAB-"]
+    contact = params["-CONTACTTAB-"]
+    sol = mat.solve_SEIRD([0, t_1], y0, coeff, contact, params_vac)
     t, y = sol.t, sol.y
 
     fig = plots.plot_SEIRD(t, y)
-    return fig
-
-
-def create_updated_fig_SEIRD_vac():
-    sol = mat.solve_SEIRD_vac()
-    t, y = sol.t, sol.y
-
-    fig = plots.plot_SEIRD_vac(t, y)
     return fig

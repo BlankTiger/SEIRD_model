@@ -8,13 +8,8 @@ from utils.plots import plot_SEIRD
 from utils.example_coefficient_matrices import sweden_coefficients
 from utils.example_initial_conditions import y0_sweden
 from utils.example_contact_matrices import sweden_contact_matrix
-from utils.drawing import (
-    draw_fig,
-    delete_figure_agg,
-    create_updated_fig_SEIRD,
-    create_updated_fig_SEIRD_vac,
-)
-from utils.validation import validate_params, validate_params_vac
+from utils.drawing import draw_fig, delete_figure_agg, create_updated_fig_SEIRD
+from utils.validation import validate_params, validate_params_vac, validate_positive_int
 
 
 if platform.system() == "Windows":
@@ -84,16 +79,18 @@ def edit_cell(window, key, row, col, justify="left"):
         if key == "Return":
             text = widget.get()
             print(text)
+        values = list(table.item(row, "values"))
         widget.destroy()
         widget.master.destroy()
-        values = list(table.item(row, "values"))
         if col > 0:
             try:
                 param_values[row - 1, col - 1] = float(text)
+                values[col] = text
+                parameters[key_tab] = param_values
             except ValueError:
-                sg.popup_error("Please enter a number.")
-            parameters[key_tab] = param_values
-        values[col] = text
+                param_values[row - 1, col - 1] = float(prev_text)
+                values[col] = prev_text
+                parameters[key_tab] = param_values
         table.item(row, values=values)
         edit = False
 
@@ -130,6 +127,7 @@ def edit_cell(window, key, row, col, justify="left"):
     frame.place(x=x, y=y, width=width, height=height, anchor="nw")
     textvariable = sg.tk.StringVar()
     textvariable.set(text)
+    prev_text = text
     entry = sg.tk.Entry(frame, textvariable=textvariable, justify=justify)
     entry.pack()
     entry.select_range(0, sg.tk.END)
@@ -239,9 +237,15 @@ while True:
         show_stat_window()
     elif event == "-DRAW-" and with_vac:
         delete_figure_agg(fig_agg)
-        if validate_params(parameters) and validate_params_vac(vac_parameters):
+        if (
+            validate_params(parameters)
+            and validate_params_vac(vac_parameters)
+            and validate_positive_int(values["-DURATION-"])
+        ):
             print("nice!")
-            fig = create_updated_fig_SEIRD_vac(parameters, vac_parameters)
+            fig = create_updated_fig_SEIRD(
+                int(values["-DURATION-"]), parameters, vac_parameters
+            )
             fig_agg = draw_fig(
                 window["-CANVAS-"].TKCanvas, fig, window["-TOOLBAR-"].TKCanvas
             )
@@ -249,9 +253,9 @@ while True:
             sg.popup_error("Invalid parameters")
     elif event == "-DRAW-":
         delete_figure_agg(fig_agg)
-        if validate_params(parameters):
+        if validate_params(parameters) and validate_positive_int(values["-DURATION-"]):
             print("nice")
-            fig = create_updated_fig_SEIRD(parameters)
+            fig = create_updated_fig_SEIRD(int(values["-DURATION-"]), parameters)
             fig_agg = draw_fig(
                 window["-CANVAS-"].TKCanvas, fig, window["-TOOLBAR-"].TKCanvas
             )

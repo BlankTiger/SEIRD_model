@@ -12,10 +12,10 @@ class solution:
     y: np.ndarray
 
 
-def solve_SEIRD(time_range, y0, coeff, contact_matrix):
+def solve_SEIRD(time_range, y0, coeff, contact_matrix, params_vac=None):
 
     dt = 1
-    time_points = np.arange(time_range[0], time_range[1], dt)
+    time_points = np.arange(time_range[0], time_range[1] + 1, dt)
     # have to create 48 solution place holders
     # row is values for for ex. S = |S0|S1|S2|S3|S4|S5|S6|S7|
     (S, E, Is, Ia, R, D) = (np.zeros(shape=(len(time_points), 8)) for _ in range(6))
@@ -34,37 +34,88 @@ def solve_SEIRD(time_range, y0, coeff, contact_matrix):
     gamma_a = coeff[5, :]
     delta = coeff[6, :]
 
-    # for each time point
-    for t in range(len(time_points) - 1):
-        # for each age group, all 6 diff eqs advance at once
-        for i in range(8):
+    if params_vac is None:
+        vac_params = [0, 0]
+        # for each time point
+        for t in range(len(time_points) - 1):
+            # for each age group, all 6 diff eqs advance at once
+            for i in range(8):
 
-            dt2 = dt / 2
-            prev_y = np.array([S[t, i], E[t, i], Is[t, i], Ia[t, i], R[t, i], D[t, i]])
-            sum_contact_Im = np.squeeze(np.asarray(contact_matrix[i, :])).T.dot(
-                Is[t, :] + Ia[t, :]
-            )
-            args = SEIRD_args(
-                beta[0, i],
-                sigma[0, i],
-                epsilon[0, i],
-                f_s[0, i],
-                gamma_s[0, i],
-                gamma_a[0, i],
-                delta[0, i],
-                sum_contact_Im,
-            )
+                dt2 = dt / 2
+                prev_y = np.array(
+                    [S[t, i], E[t, i], Is[t, i], Ia[t, i], R[t, i], D[t, i]]
+                )
+                sum_contact_Im = np.squeeze(np.asarray(contact_matrix[i, :])).T.dot(
+                    Is[t, :] + Ia[t, :]
+                )
 
-            k1 = np.array(f(t, prev_y, args))
-            k2 = np.array(f(t + dt2, prev_y + dt2 * k1, args))
-            k3 = np.array(f(t + dt2, prev_y + dt2 * k2, args))
-            k4 = np.array(f(t + dt, prev_y + dt * k3, args))
-            new_y = prev_y + (dt / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)
-            S[t + 1, i] = new_y[0]
-            E[t + 1, i] = new_y[1]
-            Is[t + 1, i] = new_y[2]
-            Ia[t + 1, i] = new_y[3]
-            R[t + 1, i] = new_y[4]
-            D[t + 1, i] = new_y[5]
+                args = SEIRD_args(
+                    beta[0, i],
+                    sigma[0, i],
+                    epsilon[0, i],
+                    f_s[0, i],
+                    gamma_s[0, i],
+                    gamma_a[0, i],
+                    delta[0, i],
+                    sum_contact_Im,
+                    vac_params,
+                )
+
+                k1 = np.array(f(t, prev_y, args))
+                k2 = np.array(f(t + dt2, prev_y + dt2 * k1, args))
+                k3 = np.array(f(t + dt2, prev_y + dt2 * k2, args))
+                k4 = np.array(f(t + dt, prev_y + dt * k3, args))
+                new_y = prev_y + (dt / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)
+                S[t + 1, i] = new_y[0]
+                E[t + 1, i] = new_y[1]
+                Is[t + 1, i] = new_y[2]
+                Ia[t + 1, i] = new_y[3]
+                R[t + 1, i] = new_y[4]
+                D[t + 1, i] = new_y[5]
+    else:
+        # for each time point
+        for t in range(len(time_points) - 1):
+            # for each age group, all 6 diff eqs advance at once
+            for i in range(8):
+
+                dt2 = dt / 2
+                prev_y = np.array(
+                    [S[t, i], E[t, i], Is[t, i], Ia[t, i], R[t, i], D[t, i]]
+                )
+                sum_contact_Im = np.squeeze(np.asarray(contact_matrix[i, :])).T.dot(
+                    Is[t, :] + Ia[t, :]
+                )
+
+                if (
+                    params_vac[f"age_grp_{i+1}"][1]
+                    <= t
+                    <= params_vac[f"age_grp_{i+1}"][2]
+                ):
+                    vac_params = [params_vac["eff"], params_vac[f"age_grp_{i+1}"][0]]
+                else:
+                    vac_params = [0, 0]
+                args = SEIRD_args(
+                    beta[0, i],
+                    sigma[0, i],
+                    epsilon[0, i],
+                    f_s[0, i],
+                    gamma_s[0, i],
+                    gamma_a[0, i],
+                    delta[0, i],
+                    sum_contact_Im,
+                    vac_params,
+                )
+
+                k1 = np.array(f(t, prev_y, args))
+                k2 = np.array(f(t + dt2, prev_y + dt2 * k1, args))
+                k3 = np.array(f(t + dt2, prev_y + dt2 * k2, args))
+                k4 = np.array(f(t + dt, prev_y + dt * k3, args))
+                new_y = prev_y + (dt / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)
+                S[t + 1, i] = new_y[0]
+                E[t + 1, i] = new_y[1]
+                Is[t + 1, i] = new_y[2]
+                Ia[t + 1, i] = new_y[3]
+                R[t + 1, i] = new_y[4]
+                D[t + 1, i] = new_y[5]
 
     return solution(np.array(time_points), np.array([S, E, Is, Ia, R, D]))

@@ -3,6 +3,8 @@ import numpy as np
 
 
 def plot_SEIRD(t, y):
+    plt.style.use("fivethirtyeight")
+    plt.rcParams.update({"font.size": 10})
     fig, ax = plt.subplots(
         3,
         2,
@@ -17,8 +19,6 @@ def plot_SEIRD(t, y):
         },
     )
     plt.gcf()
-    plt.style.use("fivethirtyeight")
-    plt.rcParams.update({"font.size": 10})
     fig.set_figwidth(13)
     fig.set_figheight(8)
     labels = [

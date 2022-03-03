@@ -43,3 +43,13 @@ def validate_params_vac(vac_params):
                 "All values like vaccination rate, start day, end day must be positive numbers."
             )
     return True
+
+
+def validate_positive_int(value):
+    try:
+        value = int(value)
+        if value < 0:
+            raise ValueError
+        return True
+    except ValueError:
+        return False
