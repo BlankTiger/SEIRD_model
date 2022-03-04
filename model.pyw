@@ -31,7 +31,7 @@ def set_scale(scale):
 sol = solve_SEIRD([0, 100], y0_sweden, sweden_coefficients, sweden_contact_matrix)
 
 # Create a figure from the solution
-fig = plot_SEIRD(sol.t, sol.y)
+fig = plot_SEIRD(sol.t, sol.y, sweden_coefficients, sweden_contact_matrix)
 
 # Scale the GUI window to the figure DPI
 set_scale(fig.dpi / 75)
@@ -78,7 +78,6 @@ def edit_cell(window, key, row, col, justify="left"):
         widget = event.widget
         if key == "Return":
             text = widget.get()
-            print(text)
         values = list(table.item(row, "values"))
         widget.destroy()
         widget.master.destroy()
@@ -103,10 +102,6 @@ def edit_cell(window, key, row, col, justify="left"):
     _x, _y, _width, _height = table.bbox(1, 1)
     _y = table.winfo_rooty() - window["-INITIALTAB-"].Widget.winfo_rooty()
 
-    print(
-        f"Table pos: {table.winfo_rootx(), table.winfo_rooty()}"
-    )  # !TODO: find a way to get the size of the table
-    print(f"Table parent: {table.master.winfo_rootx()}")
     if key == "-INITIALTAB-":
         param_values = parameters[key].astype(np.int64)
     elif key == "-PARAMTAB-":
@@ -121,7 +116,6 @@ def edit_cell(window, key, row, col, justify="left"):
     y += _height + _y
     height *= 0.9
     width *= 0.9
-    print(f"x: {x},y:{y}")
 
     frame = sg.tk.Frame(root)
     frame.place(x=x, y=y, width=width, height=height, anchor="nw")
@@ -142,6 +136,12 @@ def edit_cell(window, key, row, col, justify="left"):
     entry.bind(
         "<Escape>",
         lambda e, r=row, c=col, t=text, k="Escape", key=key: callback(
+            e, r, c, t, k, key
+        ),
+    )
+    entry.bind(
+        "<FocusOut>",
+        lambda e, r=row, c=col, t=text, k="Return", key=key: callback(
             e, r, c, t, k, key
         ),
     )
@@ -183,11 +183,9 @@ def show_param_window():
                 window[f"vaccination_start_{i}"].update(disabled=not values[event])
                 window[f"vaccination_end_{i}"].update(disabled=not values[event])
         elif event == "-SAVE-":
-            print(f"Initial conditions: \n{parameters['-INITIALTAB-']}")
-            print(f"Coefficients: \n{parameters['-PARAMTAB-']}")
-            print(f"Contact tab: \n{parameters['-CONTACTTAB-']}")
             if values["-WITH_VAC-"]:
                 try:
+                    # validate_pos_under_one()
                     vac_parameters["eff"] = float(values["vaccination_eff"])
                     for i in range(1, 9):
                         age_grp = f"age_grp_{i}"
@@ -200,10 +198,8 @@ def show_param_window():
                     sg.popup_error(
                         "Vaccination eff must be a valid number, rate, start and end parameters must all be whole numbers."
                     )
-                print(vac_parameters)
 
         elif isinstance(event, tuple):
-            print(f"winsize: {window.size}")
             row, col = event[2]
             if row is not None and col is not None:
                 edit_cell(window, event[0], row + 1, col, justify="right")
@@ -212,17 +208,48 @@ def show_param_window():
 def show_stat_window():
     global edit
     edit = False
-    window = sg.Window(title="Statistics", layout=layout_stat(), resizable=True)
+    y = sol.y
+    age_grp, r_n0, infectious, dead = [], [], [], []
+    y0 = parameters["-INITIALTAB-"]
+    coeff = parameters["-PARAMTAB-"]
+    contact = parameters["-CONTACTTAB-"]
+
+    S0 = y0[0].flat
+    beta = coeff[0].flat
+    sigma = coeff[1].flat
+    fs = coeff[3].flat
+    gamma_s = coeff[4].flat
+    gamma_a = coeff[5].flat
+    delta_n = coeff[6].flat
+
+    for i in range(8):
+        R = (
+            beta[i]
+            * sigma[i]
+            * S0[i]
+            * contact[i, i]
+            * (fs[i] * gamma_a[i] + (1 - fs[i]) * (delta_n[i] + gamma_s[i]))
+        ) / (gamma_a[i] * (gamma_s[i] + delta_n[i]))
+        R = np.round(R, 2)
+        age_grp.append(str(int(i + 1)))
+        r_n0.append(R)
+        infectious.append(np.int32(max(y[2][:, i] + y[3][:, i])))
+        dead.append(np.int32(max(y[5][:, i])))
+    age_grp.append("Total")
+    r_n0.append("")
+    infectious.append("")
+    dead.append(sum(dead))
+    stats = np.array([age_grp, r_n0, infectious, dead]).T
+
+    window = sg.Window(
+        title="Statistics", layout=layout_stat(stats), resizable=True, finalize=True
+    )
 
     while True:
         event, values = window.read()
         if event in (None, "Exit"):
             window.close()
             break
-        elif isinstance(event, tuple):
-            print(event)
-            cell = row, col = event[2]
-            edit_cell(window, event[0], row + 1, col, justify="right")
 
 
 # Main loop
@@ -242,8 +269,7 @@ while True:
             and validate_params_vac(vac_parameters)
             and validate_positive_int(values["-DURATION-"])
         ):
-            print("nice!")
-            fig = create_updated_fig_SEIRD(
+            fig, sol = create_updated_fig_SEIRD(
                 int(values["-DURATION-"]), parameters, vac_parameters
             )
             fig_agg = draw_fig(
@@ -254,8 +280,7 @@ while True:
     elif event == "-DRAW-":
         delete_figure_agg(fig_agg)
         if validate_params(parameters) and validate_positive_int(values["-DURATION-"]):
-            print("nice")
-            fig = create_updated_fig_SEIRD(int(values["-DURATION-"]), parameters)
+            fig, sol = create_updated_fig_SEIRD(int(values["-DURATION-"]), parameters)
             fig_agg = draw_fig(
                 window["-CANVAS-"].TKCanvas, fig, window["-TOOLBAR-"].TKCanvas
             )

@@ -68,5 +68,5 @@ def create_updated_fig_SEIRD(t_1, params, params_vac=None):
     sol = mat.solve_SEIRD([0, t_1], y0, coeff, contact, params_vac)
     t, y = sol.t, sol.y
 
-    fig = plots.plot_SEIRD(t, y)
-    return fig
+    fig = plots.plot_SEIRD(t, y, coeff, contact)
+    return fig, sol

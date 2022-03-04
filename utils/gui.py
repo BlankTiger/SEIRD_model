@@ -276,7 +276,7 @@ def layout_param(parameters=params, vac_parameters=vac_parameters, with_vac=Fals
         [initial_conditions_table],
         [sg.Text("Coefficients:"), create_stretch()],
         [coefficient_table],
-        [sg.Text("Contact matrix:"), create_stretch()],
+        [sg.Text("Social contact matrix:"), create_stretch()],
         [contact_table],
     ]
     main_frame = sg.Column(
@@ -353,5 +353,29 @@ def layout_param(parameters=params, vac_parameters=vac_parameters, with_vac=Fals
     return create_layout(param_buttons, main_frame, vac_layout)
 
 
-def layout_stat():
-    return create_layout()
+def layout_stat(stats):
+    if isinstance(stats, np.ndarray):
+        stats = stats.tolist()
+
+    stat_table = sg.Table(
+        stats,
+        headings=[
+            "Age group",
+            "Rₙ₀",
+            "Maximum number of infectious people",
+            "Total number of deaths",
+        ],
+        expand_x=True,
+        expand_y=True,
+        auto_size_columns=False,
+        col_widths=[8, 5, 28, 20],
+        hide_vertical_scroll=True,
+        justification="c",
+        num_rows=len(stats),
+        font=(r"Helvetica 11"),
+        key="-STATTAB-",
+    )
+    layout = [
+        [stat_table],
+    ]
+    return create_layout(layout)

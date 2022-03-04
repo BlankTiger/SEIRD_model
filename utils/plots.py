@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_SEIRD(t, y):
+def plot_SEIRD(t, y, coeff, contact):
     plt.style.use("fivethirtyeight")
     plt.rcParams.update({"font.size": 10})
     fig, ax = plt.subplots(
@@ -36,6 +36,7 @@ def plot_SEIRD(t, y):
         ax[1, 1].plot(t, y[3][:, i], label=labels[3][i], lw=1)
         ax[2, 0].plot(t, y[4][:, i], label=labels[4][i], lw=1)
         ax[2, 1].plot(t, y[5][:, i], label=labels[5][i], lw=1)
+
     for i in range(3):
         for j in range(2):
             ax[i, j].legend(

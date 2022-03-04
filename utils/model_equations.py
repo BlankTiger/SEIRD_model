@@ -25,24 +25,15 @@ def SEIRD(t, y, c: SEIRD_args):
     if S_n - c.beta_n * c.sigma_n * S_n * c.sum_m_contact_nm_times_I_m - diff_v < 0:
         diff_v = S_n
 
-    # if S_n - c.beta_n * c.sigma_n * S_n * c.sum_m_contact_nm_times_I_m < 0:
-    #     diff_v = S_n
-
+    dSndt = -c.beta_n * c.sigma_n * S_n * c.sum_m_contact_nm_times_I_m - diff_v
+    dEndt = (
+        c.beta_n * c.sigma_n * S_n * c.sum_m_contact_nm_times_I_m
+        - c.epsilon_n * E_n
+        - diff_v
+    )
     dIsndt = c.epsilon_n * c.f_sn * E_n - (c.gamma_sn + c.delta_n) * I_sn
     dIandt = c.epsilon_n * (1 - c.f_sn) * E_n - c.gamma_an * I_an
     dRndt = c.gamma_an * I_an + c.gamma_sn * I_sn + diff_v
     dDndt = c.delta_n * I_sn
-
-    if E_n + c.beta_n * c.sigma_n * S_n * c.sum_m_contact_nm_times_I_m - diff_v > 0:
-        dSndt = -c.beta_n * c.sigma_n * S_n * c.sum_m_contact_nm_times_I_m - diff_v
-        dEndt = (
-            c.beta_n * c.sigma_n * S_n * c.sum_m_contact_nm_times_I_m
-            - c.epsilon_n * E_n
-            - diff_v
-        )
-        return np.array([dSndt, dEndt, dIsndt, dIandt, dRndt, dDndt])
-
-    dSndt = -S_n - diff_v
-    dEndt = S_n - c.epsilon_n * E_n - diff_v
 
     return np.array([dSndt, dEndt, dIsndt, dIandt, dRndt, dDndt])
