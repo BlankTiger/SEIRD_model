@@ -63,13 +63,13 @@ def create_layout(*elements):
     return [[*elements]]
 
 
-duration_text = sg.Text("Duration:", size=(12, 1), expand_x=True)
+duration_text = sg.Text("Duration in days:", size=(12, 1), expand_x=True)
 duration_input = sg.InputText(
     "100", key="-DURATION-", size=(12, 1), justification="right", expand_x=True
 )
-duration_text_row = create_row(duration_text, create_stretch(), create_stretch(), True)
+duration_text_row = create_row(create_stretch(), duration_text, create_stretch(), True)
 duration_input_row = create_row(
-    duration_input, create_stretch(), create_stretch(), True
+    create_stretch(), duration_input, create_stretch(), True
 )
 
 param_row = create_row(
@@ -140,6 +140,7 @@ column2 = sg.Column(
 from utils.example_initial_conditions import y0_sweden
 from utils.example_coefficient_matrices import sweden_coefficients
 from utils.example_contact_matrices import sweden_contact_matrix
+from utils.example_vac_params import vac_parameters
 import numpy as np
 
 params = {
@@ -147,18 +148,7 @@ params = {
     "-PARAMTAB-": sweden_coefficients,
     "-CONTACTTAB-": sweden_contact_matrix,
 }
-vac_parameters = {
-    "eff": 0.9,
-    "age_grp_1": [0, 0, 0],
-    "age_grp_2": [0, 0, 0],
-    "age_grp_3": [0, 0, 0],
-    "age_grp_4": [0, 0, 0],
-    "age_grp_5": [0, 0, 0],
-    "age_grp_6": [0, 0, 0],
-    "age_grp_7": [0, 0, 0],
-    "age_grp_8": [20000, 50, 70],
-}
-
+vac_parameters = vac_parameters
 
 layout = create_layout(column1, column2)
 
@@ -225,7 +215,7 @@ def layout_param(parameters=params, vac_parameters=vac_parameters, with_vac=Fals
         key="-INITIALTAB-",
         num_rows=6,
         expand_x=True,
-        font=(r"Helvetica 11"),
+        font=(r"Helvetica 12"),
         enable_click_events=True,
     )
 
@@ -239,7 +229,7 @@ def layout_param(parameters=params, vac_parameters=vac_parameters, with_vac=Fals
         key="-PARAMTAB-",
         num_rows=7,
         expand_x=True,
-        font=(r"Helvetica 11"),
+        font=(r"Helvetica 12"),
         enable_click_events=True,
     )
 
@@ -253,7 +243,7 @@ def layout_param(parameters=params, vac_parameters=vac_parameters, with_vac=Fals
         key="-CONTACTTAB-",
         num_rows=8,
         expand_x=True,
-        font=(r"Helvetica 11"),
+        font=(r"Helvetica 12"),
         enable_click_events=True,
     )
     param_buttons = sg.Column(
@@ -267,6 +257,14 @@ def layout_param(parameters=params, vac_parameters=vac_parameters, with_vac=Fals
                 )
             ],
             [sg.Button("Save", key="-SAVE-", size=(12, 2))],
+            [create_stretch()],
+            [sg.Button("Save to file", key="-SAVEFILE-", size=(12, 2))],
+            [create_stretch()],
+            [sg.Button("Load from file", key="-LOADFILE-", size=(12, 2))],
+            [create_stretch()],
+            [sg.Button("Load default", key="-LOADDEFAULT-", size=(12, 2))],
+            [create_stretch()],
+            [sg.Button("Close", key="-CLOSE-", size=(12, 2))],
         ],
         expand_x=True,
         element_justification="c",
@@ -362,17 +360,18 @@ def layout_stat(stats):
         headings=[
             "Age group",
             "Rₙ₀",
-            "Maximum number of infectious people",
+            "Maximum number of infectious asymptomatic people",
+            "Maximum number of infectious symptomatic people",
             "Total number of deaths",
         ],
         expand_x=True,
         expand_y=True,
         auto_size_columns=False,
-        col_widths=[8, 5, 28, 20],
+        col_widths=[8, 5, 35, 35, 20],
         hide_vertical_scroll=True,
         justification="c",
         num_rows=len(stats),
-        font=(r"Helvetica 11"),
+        font=(r"Helvetica 12"),
         key="-STATTAB-",
     )
     layout = [

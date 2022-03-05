@@ -35,20 +35,6 @@ def draw_fig(canvas, fig, canvas_toolbar):
     return figure_canvas_agg
 
 
-def update_canvas(canvas, fig):
-    """Updates the figure_canvas_agg with the new figure
-
-    Args:
-        canvas (tk.Canvas): The canvas on which the figure is drawn
-        fig (matplotlib.figure): The figure to be drawn
-
-    Returns:
-        figure_canvas_agg (FigureCanvasTkAgg): The figure canvas
-    """
-    figure_canvas_agg = draw_fig(canvas, fig)
-    return figure_canvas_agg
-
-
 def delete_figure_agg(figure_canvas_agg):
     """Deletes the figure_canvas_agg content
 
@@ -68,5 +54,5 @@ def create_updated_fig_SEIRD(t_1, params, params_vac=None):
     sol = mat.solve_SEIRD([0, t_1], y0, coeff, contact, params_vac)
     t, y = sol.t, sol.y
 
-    fig = plots.plot_SEIRD(t, y, coeff, contact)
+    fig = plots.plot_SEIRD(t, y)
     return fig, sol

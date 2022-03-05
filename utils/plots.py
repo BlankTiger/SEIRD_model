@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_SEIRD(t, y, coeff, contact):
+def plot_SEIRD(t, y):
     plt.style.use("fivethirtyeight")
     plt.rcParams.update({"font.size": 10})
     fig, ax = plt.subplots(
@@ -50,4 +50,11 @@ def plot_SEIRD(t, y, coeff, contact):
             ax[i, j].ticklabel_format(axis="y", useOffset=False, style="plain")
             ax[i, j].set_xlabel("Time [days]")
             ax[i, j].set_ylabel("Population")
+    plt.text(
+        0.73,
+        0.97,
+        "© M. Urban, J. Jodłowska, J. Balbus, K. Kubica",
+        fontsize=10,
+        transform=plt.gcf().transFigure,
+    )
     return fig

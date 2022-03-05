@@ -6,7 +6,7 @@ def validate_params(params):
     Validates the parameters passed to the script.
     """
     if params["-INITIALTAB-"].dtype != np.int64:
-        raise ValueError("Initial values must be whole numbers.")
+        raise ValueError("Initial values must be integers.")
     if params["-PARAMTAB-"].dtype != np.float64:
         raise ValueError("Parameters must be a floating point numbers.")
     if params["-CONTACTTAB-"].dtype != np.float64:
@@ -17,6 +17,13 @@ def validate_params(params):
     for x in params["-PARAMTAB-"].flat:
         if x < 0:
             raise ValueError("Parameters must be positive numbers.")
+    for i in range(len(params["-PARAMTAB-"])):
+        if i >= 1:
+            for x in params["-PARAMTAB-"][i].flat:
+                if x > 1:
+                    raise ValueError(
+                        "Parameters sigma, epsilon, f_s, gamma_s, gamma_a, delta should be a positive number less or equal to 1."
+                    )
     for x in params["-CONTACTTAB-"].flat:
         if x < 0:
             raise ValueError("Contact values must be positive numbers.")
@@ -36,7 +43,7 @@ def validate_params_vac(vac_params):
             or not isinstance(vac_params[grp][2], int)
         ):
             raise ValueError(
-                "All values like vaccination rate, start day, end day must be whole numbers."
+                "All values like vaccination rate, start day, end day must be positive integers."
             )
         if vac_params[grp][0] < 0 or vac_params[grp][1] < 0 or vac_params[grp][2] < 0:
             raise ValueError(
@@ -45,11 +52,11 @@ def validate_params_vac(vac_params):
     return True
 
 
-def validate_positive_int(value):
+def validate_positive_int(value, param="Value"):
     try:
         value = int(value)
         if value < 0:
-            raise ValueError
+            raise ValueError(f"{param} must be a positive number.")
         return True
     except ValueError:
-        return False
+        raise ValueError(f"{param} must be a positive integer.")

@@ -1,13 +1,18 @@
 import platform
 import PySimpleGUI as sg
 import numpy as np
+from os import environ
+import importlib
 
+from os.path import isfile
 from utils.gui import layout, layout_param, layout_stat
+from utils.icon import icon
 from utils.mathematics import solve_SEIRD
 from utils.plots import plot_SEIRD
 from utils.example_coefficient_matrices import sweden_coefficients
 from utils.example_initial_conditions import y0_sweden
 from utils.example_contact_matrices import sweden_contact_matrix
+from utils.example_vac_params import vac_parameters
 from utils.drawing import draw_fig, delete_figure_agg, create_updated_fig_SEIRD
 from utils.validation import validate_params, validate_params_vac, validate_positive_int
 
@@ -27,11 +32,22 @@ def set_scale(scale):
     root.destroy()
 
 
+if "_PYIBoot_SPLASH" in environ and importlib.util.find_spec("pyi_splash"):
+    import pyi_splash
+
+    pyi_splash.close()
+
+if __name__ == "__main__":
+    icon = icon
+else:
+    icon = "icon.ico"
+
+
 # Solve SEIRD model for example data of Sweden
 sol = solve_SEIRD([0, 100], y0_sweden, sweden_coefficients, sweden_contact_matrix)
 
 # Create a figure from the solution
-fig = plot_SEIRD(sol.t, sol.y, sweden_coefficients, sweden_contact_matrix)
+fig = plot_SEIRD(sol.t, sol.y)
 
 # Scale the GUI window to the figure DPI
 set_scale(fig.dpi / 75)
@@ -41,10 +57,12 @@ sg.theme("DarkGrey5")
 
 window = sg.Window(
     title="SEIRD model",
+    icon=icon,
     layout=layout,
     element_justification="c",
     resizable=True,
     finalize=True,
+    font=(r"Helvetica", 11),
 )
 sg.set_options(dpi_awareness=True)
 
@@ -56,17 +74,8 @@ parameters = {
     "-PARAMTAB-": sweden_coefficients,
     "-CONTACTTAB-": sweden_contact_matrix,
 }
-vac_parameters = {
-    "eff": 0.9,
-    "age_grp_1": [0, 0, 0],
-    "age_grp_2": [0, 0, 0],
-    "age_grp_3": [0, 0, 0],
-    "age_grp_4": [0, 0, 0],
-    "age_grp_5": [0, 0, 0],
-    "age_grp_6": [0, 0, 0],
-    "age_grp_7": [0, 0, 0],
-    "age_grp_8": [20000, 50, 70],
-}
+
+vac_parameters = vac_parameters
 
 
 def edit_cell(window, key, row, col, justify="left"):
@@ -112,7 +121,6 @@ def edit_cell(window, key, row, col, justify="left"):
     text = table.item(row, "values")[col]
     x, y, width, height = table.bbox(row, col)
     x += 2 * _width
-    # x = window.size[0] - table.winfo_rootx() + col * width
     y += _height + _y
     height *= 0.9
     width *= 0.9
@@ -153,15 +161,17 @@ with_vac = False
 
 
 def show_param_window():
-    global edit, params_shown, params_size, with_vac
+    global edit, params_shown, params_size, with_vac, parameters, vac_parameters
     edit = False
     layout = layout_param(parameters, vac_parameters, with_vac)
     window = sg.Window(
         title="Parameters",
+        icon=icon,
         layout=layout,
         element_justification="c",
         resizable=False,
         finalize=True,
+        font=(r"Helvetica", 11),
     )
 
     params_shown = True
@@ -171,7 +181,7 @@ def show_param_window():
 
     while True:
         event, values = window.read()
-        if event in (None, "Exit"):
+        if event in (None, "Exit", "-CLOSE-"):
             window.close()
             break
 
@@ -194,22 +204,202 @@ def show_param_window():
                         cur_row[1] = int(values[f"vaccination_start_{i}"])
                         cur_row[2] = int(values[f"vaccination_end_{i}"])
                         vac_parameters[age_grp] = cur_row
+                    validate_params_vac(vac_parameters)
                 except ValueError:
                     sg.popup_error(
-                        "Vaccination eff must be a valid number, rate, start and end parameters must all be whole numbers."
+                        "Vaccination eff must be a value between 0 and 1, rate, start and end parameters must all be non negative, whole numbers.",
+                        title="Invalid vaccination parameters",
+                        icon=icon,
                     )
+            try:
+                validate_params(parameters)
+            except ValueError as e:
+                sg.popup_error(
+                    "Invalid parameters: " + str(e),
+                    title="Invalid parameters",
+                    icon=icon,
+                )
 
         elif isinstance(event, tuple):
             row, col = event[2]
             if row is not None and col is not None:
                 edit_cell(window, event[0], row + 1, col, justify="right")
 
+        elif event == "-SAVEFILE-":
+            try:
+                validate_params(parameters)
+                validate_params_vac(vac_parameters)
+                filename = sg.popup_get_file(
+                    "Save parameters to file",
+                    save_as=True,
+                    no_window=True,
+                    icon=icon,
+                    multiple_files=False,
+                    file_types=(("Spreadsheet files", "*.csv"), ("All files", "*.*")),
+                )
+                save_to_disk(filename, parameters, vac_parameters)
+            except ValueError as e:
+                sg.popup_error(
+                    "Invalid parameters: " + str(e),
+                    title="Invalid parameters",
+                    icon=icon,
+                )
+        elif event == "-LOADFILE-":
+            filename = sg.popup_get_file(
+                "Load parameters from file",
+                save_as=False,
+                icon=icon,
+                no_window=True,
+                multiple_files=False,
+                file_types=(("Spreadsheet files", "*.csv"), ("All files", "*.*")),
+            )
+            try:
+                param, vac_param = load_from_disk(filename)
+            except ValueError as e:
+                sg.popup_error(
+                    "Invalid file format"
+                    + str(e)
+                    + "\n"
+                    + "Please remember that this program recognizes only comma separated .csv file format. Dot is used as a decimal separator.",
+                    title="Invalid file format",
+                    icon=icon,
+                )
+                param, vac_param = None, None
+            if param is not None and vac_param is not None:
+                parameters = param
+                vac_parameters = vac_param
+                window.close()
+                show_param_window()
+        elif event == "-LOADDEFAULT-":
+            param, vac_param = load_default()
+            if param is not None and vac_param is not None:
+                parameters = param
+                vac_parameters = vac_param
+                window.close()
+                show_param_window()
+            else:
+                sg.popup_error(
+                    "Probably corrupted executable", title="Invalid file", icon=icon
+                )
+
+
+def save_to_disk(file, parameters, vac_parameters):
+    if file is None or file == "":
+        return
+    import pandas as pd
+
+    initial_values = parameters["-INITIALTAB-"].astype(str)
+    param_values = parameters["-PARAMTAB-"].astype(str)
+    contact_values = parameters["-CONTACTTAB-"].astype(str)
+
+    initial_values = np.insert(initial_values, 0, [i for i in range(1, 9)], axis=0)
+    initial_value_headers = ["n", "Sn", "En", "Isn", "Ian", "Rn", "Dn"]
+    initial_df = pd.DataFrame(initial_values, index=initial_value_headers)
+
+    param_values = np.insert(
+        param_values,
+        0,
+        [i for i in range(1, 9)],
+        axis=0,
+    )
+    param_headers = [
+        "n",
+        "beta",
+        "sigma",
+        "epsilon",
+        "fs",
+        "gamma_s",
+        "gamma_a",
+        "delta",
+    ]
+    param_df = pd.DataFrame(param_values, index=param_headers)
+
+    contact_values = np.insert(
+        contact_values,
+        0,
+        [i for i in range(1, 9)],
+        axis=1,
+    )
+    contact_headers = ["n", "1", "2", "3", "4", "5", "6", "7", "8"]
+    contact_df = pd.DataFrame(contact_values, columns=contact_headers)
+
+    eff_df = pd.DataFrame([[vac_parameters["eff"]]], columns=["eff"])
+    eff = vac_parameters.pop("eff")
+
+    vac_data = []
+    vac_index = []
+    vac_columns = ["rate", "start", "end"]
+    for k, v in vac_parameters.items():
+        vac_index.append(k)
+        vac_data.append(v)
+    vac_df = pd.DataFrame(vac_data, index=vac_index, columns=vac_columns)
+    vac_parameters["eff"] = eff
+
+    with open(file, "w", newline="\n") as f:
+        initial_df.to_csv(f, index=True, header=False)
+        f.write("\n")
+        param_df.to_csv(f, index=True, header=False)
+        f.write("\n")
+        contact_df.to_csv(f, index=False, header=True)
+        f.write("\n")
+        eff_df.to_csv(f, index=False, header=True)
+        f.write("\n")
+        vac_df.to_csv(f, index=True, header=True)
+
+
+def load_from_disk(file):
+    try:
+        if not isfile(file) or not file.lower().endswith(".csv"):
+            raise FileNotFoundError
+    except FileNotFoundError:
+        sg.popup_error("File not found", title="Error", icon=icon)
+        return None, None
+
+    import pandas as pd
+
+    dfs = pd.read_csv(file, header=None, dtype=str).dropna(how="all")
+
+    initial = dfs.iloc[1:7, 1:].to_numpy(dtype=np.int64)
+    param = dfs.iloc[8:15, 1:].to_numpy(dtype=np.float64)
+    contact = dfs.iloc[16:24, 1:].to_numpy(dtype=np.float64)
+    eff = dfs.iloc[25, :1].to_numpy(dtype=np.float64)
+    vac_head = dfs.iloc[27:35, :1].to_numpy(dtype=str)
+    vac_val = dfs.iloc[27:35, 1:4].to_numpy(dtype=np.int64)
+
+    vac_params = {"eff": eff[0]}
+    for i in range(len(vac_head)):
+        vac_params[str(vac_head[i][0])] = vac_val[i].tolist()
+
+    params = {
+        "-INITIALTAB-": np.matrix(initial),
+        "-PARAMTAB-": np.matrix(param),
+        "-CONTACTTAB-": np.matrix(contact),
+    }
+
+    return params, vac_params
+
+
+def load_default():
+    from utils.example_initial_conditions import y0_sweden
+    from utils.example_coefficient_matrices import sweden_coefficients
+    from utils.example_contact_matrices import sweden_contact_matrix
+    from utils.example_vac_params import vac_parameters
+
+    params = {
+        "-INITIALTAB-": y0_sweden,
+        "-PARAMTAB-": sweden_coefficients,
+        "-CONTACTTAB-": sweden_contact_matrix,
+    }
+    vac_params = vac_parameters
+
+    return params, vac_params
+
 
 def show_stat_window():
     global edit
     edit = False
     y = sol.y
-    age_grp, r_n0, infectious, dead = [], [], [], []
+    age_grp, r_n0, infectious_a, infectious_s, dead = [], [], [], [], []
     y0 = parameters["-INITIALTAB-"]
     coeff = parameters["-PARAMTAB-"]
     contact = parameters["-CONTACTTAB-"]
@@ -233,16 +423,23 @@ def show_stat_window():
         R = np.round(R, 2)
         age_grp.append(str(int(i + 1)))
         r_n0.append(R)
-        infectious.append(np.int32(max(y[2][:, i] + y[3][:, i])))
+        infectious_a.append(np.int64(max(y[2][:, i])))
+        infectious_s.append(np.int64(max(y[3][:, i])))
         dead.append(np.int32(max(y[5][:, i])))
     age_grp.append("Total")
     r_n0.append("")
-    infectious.append("")
+    infectious_a.append("")
+    infectious_s.append("")
     dead.append(sum(dead))
-    stats = np.array([age_grp, r_n0, infectious, dead]).T
+    stats = np.array([age_grp, r_n0, infectious_a, infectious_s, dead]).T
 
     window = sg.Window(
-        title="Statistics", layout=layout_stat(stats), resizable=True, finalize=True
+        title="Statistics",
+        layout=layout_stat(stats),
+        icon=icon,
+        resizable=True,
+        finalize=True,
+        font=(r"Helvetica", 12),
     )
 
     while True:
@@ -264,25 +461,31 @@ while True:
         show_stat_window()
     elif event == "-DRAW-" and with_vac:
         delete_figure_agg(fig_agg)
-        if (
+        try:
             validate_params(parameters)
-            and validate_params_vac(vac_parameters)
-            and validate_positive_int(values["-DURATION-"])
-        ):
+            validate_params_vac(vac_parameters)
+            validate_positive_int(values["-DURATION-"], "Duration")
             fig, sol = create_updated_fig_SEIRD(
                 int(values["-DURATION-"]), parameters, vac_parameters
             )
             fig_agg = draw_fig(
                 window["-CANVAS-"].TKCanvas, fig, window["-TOOLBAR-"].TKCanvas
             )
-        else:
-            sg.popup_error("Invalid parameters")
+        except ValueError as e:
+            sg.popup_error(
+                "Invalid parameters: " + str(e), title="Invalid parameters", icon=icon
+            )
+
     elif event == "-DRAW-":
         delete_figure_agg(fig_agg)
-        if validate_params(parameters) and validate_positive_int(values["-DURATION-"]):
+        try:
+            validate_params(parameters)
+            validate_positive_int(values["-DURATION-"], "Duration")
             fig, sol = create_updated_fig_SEIRD(int(values["-DURATION-"]), parameters)
             fig_agg = draw_fig(
                 window["-CANVAS-"].TKCanvas, fig, window["-TOOLBAR-"].TKCanvas
             )
-        else:
-            sg.popup_error("Invalid parameters")
+        except ValueError as e:
+            sg.popup_error(
+                "Invalid parameters: " + str(e), title="Invalid parameters", icon=icon
+            )
