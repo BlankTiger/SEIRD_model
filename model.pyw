@@ -1,10 +1,12 @@
 import platform
-import PySimpleGUI as sg
-import numpy as np
 from os import environ
+from os.path import isfile
 import importlib
 
-from os.path import isfile
+import PySimpleGUI as sg
+import numpy as np
+from dataclasses import dataclass
+
 from utils.gui import layout, layout_param, layout_stat
 from utils.icon import icon
 from utils.mathematics import solve_SEIRD
@@ -15,6 +17,12 @@ from utils.example_contact_matrices import sweden_contact_matrix
 from utils.example_vac_params import vac_parameters
 from utils.drawing import draw_fig, delete_figure_agg, create_updated_fig_SEIRD
 from utils.validation import validate_params, validate_params_vac, validate_positive_int
+
+
+@dataclass
+class Screen:
+    width: int
+    height: int
 
 
 if platform.system() == "Windows":
@@ -32,6 +40,14 @@ def set_scale(scale):
     root.destroy()
 
 
+def get_screen_size():
+    root = sg.tk.Tk()
+    root.withdraw()
+    screen_size = Screen(root.winfo_screenwidth(), root.winfo_screenheight())
+    root.destroy()
+    return screen_size
+
+
 if "_PYIBoot_SPLASH" in environ and importlib.util.find_spec("pyi_splash"):
     import pyi_splash
 
@@ -47,24 +63,34 @@ else:
 sol = solve_SEIRD([0, 100], y0_sweden, sweden_coefficients, sweden_contact_matrix)
 
 # Create a figure from the solution
-fig = plot_SEIRD(sol.t, sol.y)
+screen_size = get_screen_size()
+fig = plot_SEIRD(sol.t, sol.y, screen_size)
 
-# Scale the GUI window to the figure DPI
-set_scale(fig.dpi / 75)
-
+# Scale the GUI window to the figure DPI and screen size
+if screen_size.width >= 1920:
+    set_scale(fig.dpi / 75)
+    font = (r"Helvetica", 12)
+    font_param = (r"Helvetica", 12)
+    font_stat = (r"Helvetica", 12)
+    param_resizable = False
+else:
+    font = (r"Helvetica", 9)
+    font_param = (r"Helvetica", 8)
+    font_stat = (r"Helvetica", 9)
+    param_resizable = False
 
 sg.theme("DarkGrey5")
+sg.set_options(dpi_awareness=True)
 
 window = sg.Window(
     title="SEIRD model",
     icon=icon,
-    layout=layout,
+    layout=layout(screen_size),
     element_justification="c",
     resizable=True,
     finalize=True,
-    font=(r"Helvetica", 11),
+    font=font,
 )
-sg.set_options(dpi_awareness=True)
 
 # Insert initial figure into canvas
 fig_agg = draw_fig(window["-CANVAS-"].TKCanvas, fig, window["-TOOLBAR-"].TKCanvas)
@@ -108,7 +134,7 @@ def edit_cell(window, key, row, col, justify="left"):
     edit = True
     root = window.TKroot
     table = window[key].Widget
-    _x, _y, _width, _height = table.bbox(1, 1)
+    _, _y, _width, _height = table.bbox(1, 1)
     _y = table.winfo_rooty() - window["-INITIALTAB-"].Widget.winfo_rooty()
 
     if key == "-INITIALTAB-":
@@ -169,9 +195,10 @@ def show_param_window():
         icon=icon,
         layout=layout,
         element_justification="c",
-        resizable=False,
+        resizable=param_resizable,
+        grab_anywhere=True,
         finalize=True,
-        font=(r"Helvetica", 11),
+        font=font_param,
     )
 
     params_shown = True
@@ -195,7 +222,6 @@ def show_param_window():
         elif event == "-SAVE-":
             if values["-WITH_VAC-"]:
                 try:
-                    # validate_pos_under_one()
                     vac_parameters["eff"] = float(values["vaccination_eff"])
                     for i in range(1, 9):
                         age_grp = f"age_grp_{i}"
@@ -395,6 +421,24 @@ def load_default():
     return params, vac_params
 
 
+def save_stats_to_disk(file, stats):
+    if file is None or file == "":
+        return
+    import pandas as pd
+
+    stats_headers = [
+        "n",
+        "R_n0",
+        "max(I_an)",
+        "max(I_sn)",
+        "D_n(t_max)",
+    ]
+    stats_df = pd.DataFrame(stats, columns=stats_headers)
+
+    with open(file, "w", newline="\n") as f:
+        stats_df.to_csv(f, index=False, header=True)
+
+
 def show_stat_window():
     global edit
     edit = False
@@ -426,10 +470,10 @@ def show_stat_window():
         infectious_a.append(np.int64(max(y[2][:, i])))
         infectious_s.append(np.int64(max(y[3][:, i])))
         dead.append(np.int32(max(y[5][:, i])))
-    age_grp.append("Total")
+    age_grp.append("")
     r_n0.append("")
     infectious_a.append("")
-    infectious_s.append("")
+    infectious_s.append("Sum:")
     dead.append(sum(dead))
     stats = np.array([age_grp, r_n0, infectious_a, infectious_s, dead]).T
 
@@ -439,7 +483,7 @@ def show_stat_window():
         icon=icon,
         resizable=True,
         finalize=True,
-        font=(r"Helvetica", 12),
+        font=font_stat,
     )
 
     while True:
@@ -447,6 +491,23 @@ def show_stat_window():
         if event in (None, "Exit"):
             window.close()
             break
+        elif event == "-SAVESTATS-":
+            try:
+                filename = sg.popup_get_file(
+                    "Save parameters to file",
+                    save_as=True,
+                    no_window=True,
+                    icon=icon,
+                    multiple_files=False,
+                    file_types=(("Spreadsheet files", "*.csv"), ("All files", "*.*")),
+                )
+                save_stats_to_disk(filename, stats)
+            except ValueError as e:
+                sg.popup_error(
+                    "Invalid parameters: " + str(e),
+                    title="Invalid parameters",
+                    icon=icon,
+                )
 
 
 # Main loop
@@ -466,7 +527,7 @@ while True:
             validate_params_vac(vac_parameters)
             validate_positive_int(values["-DURATION-"], "Duration")
             fig, sol = create_updated_fig_SEIRD(
-                int(values["-DURATION-"]), parameters, vac_parameters
+                int(values["-DURATION-"]), parameters, vac_parameters, screen_size
             )
             fig_agg = draw_fig(
                 window["-CANVAS-"].TKCanvas, fig, window["-TOOLBAR-"].TKCanvas
@@ -481,7 +542,9 @@ while True:
         try:
             validate_params(parameters)
             validate_positive_int(values["-DURATION-"], "Duration")
-            fig, sol = create_updated_fig_SEIRD(int(values["-DURATION-"]), parameters)
+            fig, sol = create_updated_fig_SEIRD(
+                int(values["-DURATION-"]), parameters, screen_size=screen_size
+            )
             fig_agg = draw_fig(
                 window["-CANVAS-"].TKCanvas, fig, window["-TOOLBAR-"].TKCanvas
             )

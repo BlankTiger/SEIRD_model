@@ -16,9 +16,7 @@ class SEIRD_args:
 
 
 def SEIRD(t, y, c: SEIRD_args):
-    """
-    The SEIRD model.
-    """
+    """The SEIRD model."""
     diff_v = c.vac_params[0] * c.vac_params[1]
     S_n, E_n, I_sn, I_an, R_n, D_n = y
 
@@ -27,9 +25,7 @@ def SEIRD(t, y, c: SEIRD_args):
 
     dSndt = -c.beta_n * c.sigma_n * S_n * c.sum_m_contact_nm_times_I_m - diff_v
     dEndt = (
-        c.beta_n * c.sigma_n * S_n * c.sum_m_contact_nm_times_I_m
-        - c.epsilon_n * E_n
-        - diff_v
+        c.beta_n * c.sigma_n * S_n * c.sum_m_contact_nm_times_I_m - c.epsilon_n * E_n
     )
     dIsndt = c.epsilon_n * c.f_sn * E_n - (c.gamma_sn + c.delta_n) * I_sn
     dIandt = c.epsilon_n * (1 - c.f_sn) * E_n - c.gamma_an * I_an

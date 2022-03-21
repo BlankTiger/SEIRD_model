@@ -16,3 +16,4 @@ sweden_SEIRD.pdf
 dist/
 
 SEIRD_model.spec
+/output/
