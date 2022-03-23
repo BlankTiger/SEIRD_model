@@ -231,13 +231,13 @@ def layout_param(parameters=params, vac_parameters=vac_parameters, with_vac=Fals
     left_headings = np.array(
         [
             [
-                "β ₙ",
-                "σ ₙ",
-                "ε ₙ",
-                "f ₛ,ₙ",
-                "γ ₛ,ₙ",
-                "γ ₐ,ₙ",
-                "δ ₙ",
+                "βₙ",
+                "σₙ",
+                "εₙ",
+                "fₛ,ₙ",
+                "γₛ,ₙ",
+                "γₐ,ₙ",
+                "δₙ",
             ]
         ]
     )
