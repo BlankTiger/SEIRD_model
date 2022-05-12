@@ -453,8 +453,8 @@ def layout_stat(stats):
     headings = [
         " n ",
         "R_n0",
-        "max(I_an)",
         "max(I_sn)",
+        "max(I_an)",
         "D_n(t_max)",
     ]
 

@@ -429,8 +429,8 @@ def save_stats_to_disk(file, stats):
     stats_headers = [
         "n",
         "R_n0",
-        "max(I_an)",
         "max(I_sn)",
+        "max(I_an)",
         "D_n(t_max)",
     ]
     stats_df = pd.DataFrame(stats, columns=stats_headers)
@@ -467,15 +467,15 @@ def show_stat_window():
         R = np.round(R, 2)
         age_grp.append(str(int(i + 1)))
         r_n0.append(R)
-        infectious_a.append(np.int64(max(y[2][:, i])))
-        infectious_s.append(np.int64(max(y[3][:, i])))
+        infectious_s.append(np.int64(max(y[2][:, i])))
+        infectious_a.append(np.int64(max(y[3][:, i])))
         dead.append(np.int32(max(y[5][:, i])))
     age_grp.append("")
     r_n0.append("")
-    infectious_a.append("")
-    infectious_s.append("Sum:")
+    infectious_s.append("")
+    infectious_a.append("Sum:")
     dead.append(sum(dead))
-    stats = np.array([age_grp, r_n0, infectious_a, infectious_s, dead]).T
+    stats = np.array([age_grp, r_n0, infectious_s, infectious_a, dead]).T
 
     window = sg.Window(
         title="Statistics",
