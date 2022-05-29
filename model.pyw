@@ -14,7 +14,7 @@ from utils.plots import plot_SEIRD
 from utils.example_coefficient_matrices import sweden_coefficients
 from utils.example_initial_conditions import y0_sweden
 from utils.example_contact_matrices import sweden_contact_matrix
-from utils.example_vac_params import vac_parameters
+from utils.example_vac_params import default_vac_params
 from utils.drawing import draw_fig, delete_figure_agg, create_updated_fig_SEIRD
 from utils.validation import validate_params, validate_params_vac, validate_positive_int
 
@@ -95,13 +95,13 @@ window = sg.Window(
 # Insert initial figure into canvas
 fig_agg = draw_fig(window["-CANVAS-"].TKCanvas, fig, window["-TOOLBAR-"].TKCanvas)
 
-parameters = {
+default_parameters = {
     "-INITIALTAB-": y0_sweden,
     "-PARAMTAB-": sweden_coefficients,
     "-CONTACTTAB-": sweden_contact_matrix,
 }
-
-vac_parameters = vac_parameters
+parameters = default_parameters
+vac_parameters = default_vac_params()
 
 
 def edit_cell(window, key, row, col, justify="left"):
@@ -261,7 +261,7 @@ def show_param_window():
                     no_window=True,
                     icon=icon,
                     multiple_files=False,
-                    file_types=(("Spreadsheet files", "*.csv"), ("All files", "*.*")),
+                    file_types=(("Spreadsheet files", "*.xlsx"), ("All files", "*.*")),
                 )
                 save_to_disk(filename, parameters, vac_parameters)
             except ValueError as e:
@@ -277,7 +277,7 @@ def show_param_window():
                 icon=icon,
                 no_window=True,
                 multiple_files=False,
-                file_types=(("Spreadsheet files", "*.csv"), ("All files", "*.*")),
+                file_types=(("Spreadsheet files", "*.xlsx"), ("All files", "*.*")),
             )
             try:
                 param, vac_param = load_from_disk(filename)
@@ -286,7 +286,7 @@ def show_param_window():
                     "Invalid file format"
                     + str(e)
                     + "\n"
-                    + "Please remember that this program recognizes only comma separated .csv file format. Dot is used as a decimal separator.",
+                    + "Please remember that this program recognizes .xlsx file format.",
                     title="Invalid file format",
                     icon=icon,
                 )
@@ -314,9 +314,9 @@ def save_to_disk(file, parameters, vac_parameters):
         return
     import pandas as pd
 
-    initial_values = parameters["-INITIALTAB-"].astype(str)
-    param_values = parameters["-PARAMTAB-"].astype(str)
-    contact_values = parameters["-CONTACTTAB-"].astype(str)
+    initial_values = parameters["-INITIALTAB-"].astype(np.int64)
+    param_values = parameters["-PARAMTAB-"].astype(np.float64)
+    contact_values = parameters["-CONTACTTAB-"].astype(np.float64)
 
     initial_values = np.insert(initial_values, 0, [i for i in range(1, 9)], axis=0)
     initial_value_headers = ["n", "Sn", "En", "Isn", "Ian", "Rn", "Dn"]
@@ -361,21 +361,34 @@ def save_to_disk(file, parameters, vac_parameters):
     vac_df = pd.DataFrame(vac_data, index=vac_index, columns=vac_columns)
     vac_parameters["eff"] = eff
 
-    with open(file, "w", newline="\n") as f:
-        initial_df.to_csv(f, index=True, header=False)
-        f.write("\n")
-        param_df.to_csv(f, index=True, header=False)
-        f.write("\n")
-        contact_df.to_csv(f, index=False, header=True)
-        f.write("\n")
-        eff_df.to_csv(f, index=False, header=True)
-        f.write("\n")
-        vac_df.to_csv(f, index=True, header=True)
+    try:
+        with pd.ExcelWriter(file) as writer:
+            initial_df.to_excel(
+                writer, sheet_name="Initial values", index=True, header=False
+            )
+            param_df.to_excel(writer, sheet_name="Parameters", index=True, header=False)
+            contact_df.to_excel(
+                writer, sheet_name="Contact matrix", index=False, header=True
+            )
+            eff_df.to_excel(
+                writer, sheet_name="Vaccination efficacy", index=False, header=True
+            )
+            vac_df.to_excel(
+                writer, sheet_name="Vaccination parameters", index=True, header=True
+            )
+    except PermissionError:
+        sg.popup_error(
+            "The file is open in another program. Please close it and try again.",
+            title="File open",
+            icon=icon,
+        )
+    except Exception as e:
+        sg.popup_error("Unknown error: " + str(e), title="Unknown error", icon=icon)
 
 
 def load_from_disk(file):
     try:
-        if not isfile(file) or not file.lower().endswith(".csv"):
+        if not isfile(file) or not file.lower().endswith(".xlsx"):
             raise FileNotFoundError
     except FileNotFoundError:
         sg.popup_error("File not found", title="Error", icon=icon)
@@ -383,23 +396,40 @@ def load_from_disk(file):
 
     import pandas as pd
 
-    dfs = pd.read_csv(file, header=None, dtype=str).dropna(how="all")
-
-    initial = dfs.iloc[1:7, 1:].to_numpy(dtype=np.int64)
-    param = dfs.iloc[8:15, 1:].to_numpy(dtype=np.float64)
-    contact = dfs.iloc[16:24, 1:].to_numpy(dtype=np.float64)
-    eff = dfs.iloc[25, :1].to_numpy(dtype=np.float64)
-    vac_head = dfs.iloc[27:35, :1].to_numpy(dtype=str)
-    vac_val = dfs.iloc[27:35, 1:4].to_numpy(dtype=np.int64)
+    try:
+        file = pd.ExcelFile(file)
+        initial = np.matrix(file.parse(0, dtype=str).iloc[:, 1:], dtype=np.int64)
+        param = np.matrix(file.parse(1, dtype=str).iloc[:, 1:], dtype=np.float64)
+        contact = np.matrix(file.parse(2, dtype=str).iloc[:, 1:], dtype=np.float64)
+        eff = file.parse(3, dtype=str).to_numpy(dtype=np.float64).flatten()
+        vac = np.matrix(file.parse(4, dtype=str).iloc[:, 1:], dtype=np.int64)
+    except PermissionError:
+        sg.popup_error(
+            "File is probably opened in another program. Close it and try again.",
+            title="Error",
+            icon=icon,
+        )
+        return None, None
+    except Exception as e:
+        sg.popup_error(
+            "Invalid file format"
+            + str(e)
+            + "\n"
+            + "Please remember that this program recognizes .xlsx file format.",
+            title="Invalid file format",
+            icon=icon,
+        )
+        return None, None
 
     vac_params = {"eff": eff[0]}
-    for i in range(len(vac_head)):
-        vac_params[str(vac_head[i][0])] = vac_val[i].tolist()
+    vac_head = [f"age_grp_{i}" for i in range(1, 9)]
+    for i in range(len(vac)):
+        vac_params[vac_head[i]] = vac[i].tolist()[0]
 
     params = {
-        "-INITIALTAB-": np.matrix(initial),
-        "-PARAMTAB-": np.matrix(param),
-        "-CONTACTTAB-": np.matrix(contact),
+        "-INITIALTAB-": initial,
+        "-PARAMTAB-": param,
+        "-CONTACTTAB-": contact,
     }
 
     return params, vac_params
@@ -409,16 +439,15 @@ def load_default():
     from utils.example_initial_conditions import y0_sweden
     from utils.example_coefficient_matrices import sweden_coefficients
     from utils.example_contact_matrices import sweden_contact_matrix
-    from utils.example_vac_params import vac_parameters
+    from utils.example_vac_params import default_vac_params
 
     params = {
         "-INITIALTAB-": y0_sweden,
         "-PARAMTAB-": sweden_coefficients,
         "-CONTACTTAB-": sweden_contact_matrix,
     }
-    vac_params = vac_parameters
 
-    return params, vac_params
+    return params, default_vac_params()
 
 
 def save_stats_to_disk(file, stats):
@@ -435,8 +464,17 @@ def save_stats_to_disk(file, stats):
     ]
     stats_df = pd.DataFrame(stats, columns=stats_headers)
 
-    with open(file, "w", newline="\n") as f:
-        stats_df.to_csv(f, index=False, header=True)
+    try:
+        with pd.ExcelWriter(file) as writer:
+            stats_df.to_excel(writer, sheet_name="Statistics", index=False, header=True)
+    except PermissionError:
+        sg.popup_error(
+            "File is opened elsewhere. Close it and try again.",
+            title="Error",
+            icon=icon,
+        )
+    except Exception as e:
+        sg.popup_error("Unknown error: " + str(e), title="Unknown error", icon=icon)
 
 
 def show_stat_window():
@@ -499,7 +537,7 @@ def show_stat_window():
                     no_window=True,
                     icon=icon,
                     multiple_files=False,
-                    file_types=(("Spreadsheet files", "*.csv"), ("All files", "*.*")),
+                    file_types=(("Spreadsheet files", "*.xlsx"), ("All files", "*.*")),
                 )
                 save_stats_to_disk(filename, stats)
             except ValueError as e:

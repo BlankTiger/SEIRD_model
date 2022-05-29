@@ -197,7 +197,7 @@ def layout(screen_size):
 from utils.example_initial_conditions import y0_sweden
 from utils.example_coefficient_matrices import sweden_coefficients
 from utils.example_contact_matrices import sweden_contact_matrix
-from utils.example_vac_params import vac_parameters
+from utils.example_vac_params import default_vac_params
 import numpy as np
 
 params = {
@@ -205,7 +205,7 @@ params = {
     "-PARAMTAB-": sweden_coefficients,
     "-CONTACTTAB-": sweden_contact_matrix,
 }
-vac_parameters = vac_parameters
+vac_parameters = default_vac_params()
 
 
 def layout_param(parameters=params, vac_parameters=vac_parameters, with_vac=False):
