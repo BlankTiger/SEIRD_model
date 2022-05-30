@@ -184,12 +184,13 @@ def edit_cell(window, key, row, col, justify="left"):
 params_shown = False
 params_size = None
 with_vac = False
+vac_E = True
 
 
 def show_param_window():
-    global edit, params_shown, params_size, with_vac, parameters, vac_parameters
+    global edit, params_shown, params_size, with_vac, vac_E, parameters, vac_parameters
     edit = False
-    layout = layout_param(parameters, vac_parameters, with_vac)
+    layout = layout_param(parameters, vac_parameters, with_vac, vac_E)
     window = sg.Window(
         title="Parameters",
         icon=icon,
@@ -211,7 +212,8 @@ def show_param_window():
         if event in (None, "Exit", "-CLOSE-"):
             window.close()
             break
-
+        elif event == "-VAC_E-":
+            vac_E = values["-VAC_E-"]
         elif event == "-WITH_VAC-":
             with_vac = values["-WITH_VAC-"]
             window["vaccination_eff"].update(disabled=not values[event])
@@ -565,7 +567,11 @@ while True:
             validate_params_vac(vac_parameters)
             validate_positive_int(values["-DURATION-"], "Duration")
             fig, sol = create_updated_fig_SEIRD(
-                int(values["-DURATION-"]), parameters, vac_parameters, screen_size
+                int(values["-DURATION-"]),
+                parameters,
+                vac_parameters,
+                screen_size,
+                vac_E,
             )
             fig_agg = draw_fig(
                 window["-CANVAS-"].TKCanvas, fig, window["-TOOLBAR-"].TKCanvas

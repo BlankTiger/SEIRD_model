@@ -2,7 +2,6 @@ from . import model_equations
 import numpy as np
 from dataclasses import dataclass
 
-f = model_equations.SEIRD
 SEIRD_args = model_equations.SEIRD_args
 
 
@@ -12,7 +11,10 @@ class solution:
     y: np.ndarray
 
 
-def solve_SEIRD(time_range, y0, coeff, contact_matrix, params_vac=None):
+def solve_SEIRD(time_range, y0, coeff, contact_matrix, params_vac=None, vac_E=True):
+    f = model_equations.SEIRD
+    if vac_E:
+        f = model_equations.SEIRD_SE
 
     dt = 1
     time_points = np.arange(time_range[0], time_range[1] + 1, dt)

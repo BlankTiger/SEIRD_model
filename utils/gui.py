@@ -208,7 +208,9 @@ params = {
 vac_parameters = default_vac_params()
 
 
-def layout_param(parameters=params, vac_parameters=vac_parameters, with_vac=False):
+def layout_param(
+    parameters=params, vac_parameters=vac_parameters, with_vac=False, vac_E=False
+):
     vertical_scroll = True
     y0_sweden = parameters["-INITIALTAB-"].astype(str)
     sweden_coefficients = parameters["-PARAMTAB-"].astype(str)
@@ -308,6 +310,15 @@ def layout_param(parameters=params, vac_parameters=vac_parameters, with_vac=Fals
                     default=with_vac,
                     key="-WITH_VAC-",
                     enable_events=True,
+                )
+            ],
+            [sg.Text("Vaccinate groups:")],
+            [
+                create_row(
+                    sg.Checkbox("S", disabled=True, default=True),
+                    create_stretch(),
+                    sg.Checkbox("E", default=vac_E, key="-VAC_E-", enable_events=True),
+                    True,
                 )
             ],
             [sg.Button("Save", key="-SAVE-", size=settings.button_size)],
