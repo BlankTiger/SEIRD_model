@@ -9,7 +9,6 @@ from dataclasses import dataclass
 
 from utils.gui import layout, layout_param, layout_stat
 from utils.icon import icon
-from utils.mathematics import solve_SEIRD
 from utils.plots import plot_SEIRD
 from utils.example_coefficient_matrices import sweden_coefficients
 from utils.example_initial_conditions import y0_sweden

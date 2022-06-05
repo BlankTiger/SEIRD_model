@@ -68,7 +68,7 @@ def plot_SEIRD(t, y, screen_size):
             )
             for line in legend.get_lines():
                 line.set_linewidth(3)
-            ax[i, j].ticklabel_format(axis="y", useOffset=False, style="plain")
+            ax[i, j].ticklabel_format(axis="y", useOffset=False)
             ax[i, j].set_xlabel("Time [days]")
             ax[i, j].set_ylabel("Population")
 

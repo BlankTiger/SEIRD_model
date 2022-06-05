@@ -17,3 +17,5 @@ dist/
 
 SEIRD_model.spec
 /output/
+
+/SEIRD_math_rs/target

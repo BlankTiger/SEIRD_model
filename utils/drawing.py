@@ -3,10 +3,8 @@ from matplotlib.backends.backend_tkagg import (
     NavigationToolbar2Tk,
 )
 from . import plots
-from . import mathematics as mat
 from seird_math import seird_math
 import numpy as np
-import timeit
 
 
 class Toolbar(NavigationToolbar2Tk):
