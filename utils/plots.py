@@ -68,12 +68,12 @@ def plot_SEIRD(t, y, screen_size):
             )
             for line in legend.get_lines():
                 line.set_linewidth(3)
-            ax[i, j].ticklabel_format(axis="y", useOffset=False)
+            ax[i, j].ticklabel_format(axis="y", style="sci")
             ax[i, j].set_xlabel("Time [days]")
             ax[i, j].set_ylabel("Population")
 
     plt.text(
-        0.1,
+        0.7,
         0.97,
         "© M. Urban, J. Jodłowska, J. Balbus, K. Kubica",
         fontsize=10,

@@ -60,13 +60,14 @@ else:
 
 
 # Solve SEIRD model for example data of Sweden
-t, y = seird_math.solve_SEIRD(
+t, y = seird_math.solve_seird(
     (0, 100),
     y0_sweden.astype(np.float64),
     sweden_coefficients,
     sweden_contact_matrix,
     dict(),
     False,
+    1,
 )
 
 # Create a figure from the solution

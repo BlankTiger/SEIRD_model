@@ -54,8 +54,8 @@ def create_updated_fig_SEIRD(
     y0 = params["-INITIALTAB-"]
     coeff = params["-PARAMTAB-"]
     contact = params["-CONTACTTAB-"]
-    t, y = seird_math.solve_SEIRD(
-        (0, t_1), y0.astype(np.float64), coeff, contact, params_vac, vac_E
+    t, y = seird_math.solve_seird(
+        (0, t_1), y0.astype(np.float64), coeff, contact, params_vac, vac_E, 1
     )
 
     fig = plots.plot_SEIRD(t, y, screen_size)
