@@ -356,7 +356,7 @@ def layout_param(
     )
     vac_eff_value = create_col_for_row(
         sg.InputText(
-            f"{vac_parameters['eff']}",
+            f"{vac_parameters['eff'][0]}",
             size=settings.vac_input_text_size,
             justification="right",
             key="vaccination_eff",

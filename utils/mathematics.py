@@ -11,7 +11,7 @@ class solution:
     y: np.ndarray
 
 
-def solve_SEIRD(time_range, y0, coeff, contact_matrix, params_vac=None, vac_E=True):
+def solve_SEIRD(time_range, y0, coeff, contact_matrix, params_vac=dict(), vac_E=True):
     f = model_equations.SEIRD
     if vac_E:
         f = model_equations.SEIRD_SE
@@ -36,8 +36,7 @@ def solve_SEIRD(time_range, y0, coeff, contact_matrix, params_vac=None, vac_E=Tr
     gamma_a = coeff[5, :]
     delta = coeff[6, :]
 
-    if params_vac is None:
-        vac_params = [0, 0]
+    if not params_vac:
         # for each time point
         for t in range(len(time_points) - 1):
             # for each age group, all 6 diff eqs advance at once
@@ -60,7 +59,7 @@ def solve_SEIRD(time_range, y0, coeff, contact_matrix, params_vac=None, vac_E=Tr
                     gamma_a[0, i],
                     delta[0, i],
                     sum_contact_Im,
-                    vac_params,
+                    0,
                 )
 
                 k1 = np.array(f(t, prev_y, args))

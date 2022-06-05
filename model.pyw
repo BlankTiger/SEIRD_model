@@ -17,6 +17,7 @@ from utils.example_contact_matrices import sweden_contact_matrix
 from utils.example_vac_params import default_vac_params
 from utils.drawing import draw_fig, delete_figure_agg, create_updated_fig_SEIRD
 from utils.validation import validate_params, validate_params_vac, validate_positive_int
+from seird_math import seird_math
 
 
 @dataclass
@@ -60,11 +61,18 @@ else:
 
 
 # Solve SEIRD model for example data of Sweden
-sol = solve_SEIRD([0, 100], y0_sweden, sweden_coefficients, sweden_contact_matrix)
+t, y = seird_math.solve_SEIRD(
+    (0, 100),
+    y0_sweden.astype(np.float64),
+    sweden_coefficients,
+    sweden_contact_matrix,
+    dict(),
+    False,
+)
 
 # Create a figure from the solution
 screen_size = get_screen_size()
-fig = plot_SEIRD(sol.t, sol.y, screen_size)
+fig = plot_SEIRD(t, y, screen_size)
 
 # Scale the GUI window to the figure DPI and screen size
 if screen_size.width >= 1920:
@@ -224,7 +232,7 @@ def show_param_window():
         elif event == "-SAVE-":
             if values["-WITH_VAC-"]:
                 try:
-                    vac_parameters["eff"] = float(values["vaccination_eff"])
+                    vac_parameters["eff"][0] = float(values["vaccination_eff"])
                     for i in range(1, 9):
                         age_grp = f"age_grp_{i}"
                         cur_row = vac_parameters[age_grp]
@@ -351,8 +359,8 @@ def save_to_disk(file, parameters, vac_parameters):
     contact_headers = ["n", "1", "2", "3", "4", "5", "6", "7", "8"]
     contact_df = pd.DataFrame(contact_values, columns=contact_headers)
 
-    eff_df = pd.DataFrame([[vac_parameters["eff"]]], columns=["eff"])
-    eff = vac_parameters.pop("eff")
+    eff_df = pd.DataFrame([[vac_parameters["eff"][0]]], columns=["eff"])
+    eff = vac_parameters.pop("eff")[0]
 
     vac_data = []
     vac_index = []
@@ -361,7 +369,7 @@ def save_to_disk(file, parameters, vac_parameters):
         vac_index.append(k)
         vac_data.append(v)
     vac_df = pd.DataFrame(vac_data, index=vac_index, columns=vac_columns)
-    vac_parameters["eff"] = eff
+    vac_parameters["eff"] = [eff]
 
     try:
         with pd.ExcelWriter(file) as writer:
@@ -423,7 +431,7 @@ def load_from_disk(file):
         )
         return None, None
 
-    vac_params = {"eff": eff[0]}
+    vac_params = {"eff": [eff[0]]}
     vac_head = [f"age_grp_{i}" for i in range(1, 9)]
     for i in range(len(vac)):
         vac_params[vac_head[i]] = vac[i].tolist()[0]
@@ -480,9 +488,9 @@ def save_stats_to_disk(file, stats):
 
 
 def show_stat_window():
-    global edit
+    global edit, y
     edit = False
-    y = sol.y
+
     age_grp, r_n0, infectious_a, infectious_s, dead = [], [], [], [], []
     y0 = parameters["-INITIALTAB-"]
     coeff = parameters["-PARAMTAB-"]
@@ -566,7 +574,7 @@ while True:
             validate_params(parameters)
             validate_params_vac(vac_parameters)
             validate_positive_int(values["-DURATION-"], "Duration")
-            fig, sol = create_updated_fig_SEIRD(
+            fig, t, y = create_updated_fig_SEIRD(
                 int(values["-DURATION-"]),
                 parameters,
                 vac_parameters,
@@ -586,7 +594,7 @@ while True:
         try:
             validate_params(parameters)
             validate_positive_int(values["-DURATION-"], "Duration")
-            fig, sol = create_updated_fig_SEIRD(
+            fig, t, y = create_updated_fig_SEIRD(
                 int(values["-DURATION-"]), parameters, screen_size=screen_size
             )
             fig_agg = draw_fig(

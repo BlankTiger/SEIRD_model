@@ -1,6 +1,6 @@
 def default_vac_params():
     return {
-        "eff": 0.9,
+        "eff": [0.9],
         "age_grp_1": [0, 0, 0],
         "age_grp_2": [0, 0, 0],
         "age_grp_3": [0, 0, 0],

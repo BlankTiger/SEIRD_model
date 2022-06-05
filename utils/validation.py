@@ -31,9 +31,9 @@ def validate_params(params):
 
 
 def validate_params_vac(vac_params):
-    if not isinstance(vac_params["eff"], float):
+    if not isinstance(vac_params["eff"][0], float):
         raise ValueError("Vaccination efficiency must be a floating point number.")
-    if vac_params["eff"] < 0 or vac_params["eff"] > 1:
+    if vac_params["eff"][0] < 0 or vac_params["eff"][0] > 1:
         raise ValueError("Vaccination efficiency must be between 0 and 1.")
     for i in range(1, 9):
         grp = f"age_grp_{i}"

@@ -12,12 +12,12 @@ class SEIRD_args:
     gamma_an: float
     delta_n: float
     sum_m_contact_nm_times_I_m: float
-    vac_params: list
+    vac_params: list | int
 
 
 def SEIRD(t, y, c: SEIRD_args):
     """The SEIRD model. Only S group is vaccinated."""
-    diff_v = c.vac_params[0] * c.vac_params[1]
+    diff_v = c.vac_params
     S_n, E_n, I_sn, I_an, R_n, D_n = y
 
     if S_n - c.beta_n * c.sigma_n * S_n * c.sum_m_contact_nm_times_I_m - diff_v < 0:

@@ -4,6 +4,9 @@ from matplotlib.backends.backend_tkagg import (
 )
 from . import plots
 from . import mathematics as mat
+from seird_math import seird_math
+import numpy as np
+import timeit
 
 
 class Toolbar(NavigationToolbar2Tk):
@@ -48,13 +51,14 @@ def delete_figure_agg(figure_canvas_agg):
 
 
 def create_updated_fig_SEIRD(
-    t_1, params, params_vac=None, screen_size=None, vac_E=True
+    t_1, params, params_vac=dict(), screen_size=None, vac_E=True
 ):
     y0 = params["-INITIALTAB-"]
     coeff = params["-PARAMTAB-"]
     contact = params["-CONTACTTAB-"]
-    sol = mat.solve_SEIRD([0, t_1], y0, coeff, contact, params_vac, vac_E)
-    t, y = sol.t, sol.y
+    t, y = seird_math.solve_SEIRD(
+        (0, t_1), y0.astype(np.float64), coeff, contact, params_vac, vac_E
+    )
 
     fig = plots.plot_SEIRD(t, y, screen_size)
-    return fig, sol
+    return fig, t, y
