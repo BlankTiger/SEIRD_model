@@ -110,7 +110,6 @@ def layout(screen_size):
         settings.vac_font = (r"Helvetica", 8)
         settings.stat_font = (r"Helvetica", 9)
         settings.vac_scrollable = True
-        print(settings.canvas_size)
 
     duration_text = sg.Text("Duration in days:", size=settings.text_size, expand_x=True)
     duration_input = sg.InputText(

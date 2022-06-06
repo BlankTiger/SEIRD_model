@@ -67,7 +67,7 @@ t, y = seird_math.solve_seird(
     sweden_contact_matrix,
     dict(),
     False,
-    1,
+    0.1,
 )
 
 # Create a figure from the solution

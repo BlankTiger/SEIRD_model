@@ -73,7 +73,7 @@ def plot_SEIRD(t, y, screen_size):
             ax[i, j].set_ylabel("Population")
 
     plt.text(
-        0.7,
+        0.13,
         0.97,
         "© M. Urban, J. Jodłowska, J. Balbus, K. Kubica",
         fontsize=10,

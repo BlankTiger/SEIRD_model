@@ -39,9 +39,8 @@ fn seird_se(_t: f64, y: &Array1<f64>, c: &SeirdArgs) -> Array1<f64> {
     let ratio = y[0] / (y[0] + y[1]);
     let vac_s: f64;
     let vac_e: f64;
-    let mut corr = 0.0;
 
-    if diff_v != 0.0 && ratio < 1.0 {
+    if diff_v != 0.0 && ratio <= 1.0 {
         vac_s = diff_v * ratio;
         vac_e = diff_v * (1.0 - ratio);
     } else {
@@ -50,17 +49,8 @@ fn seird_se(_t: f64, y: &Array1<f64>, c: &SeirdArgs) -> Array1<f64> {
         diff_v = 0.0;
     }
 
-    if y[0] - c.beta * c.sigma * y[0] * c.sum_contact - vac_s < 0.0 {
-        corr = y[0];
-    }
-
-    dydt[0] = -c.beta * c.sigma * y[0] * c.sum_contact - vac_s - corr;
-
-    if y[1] * c.epsilon + vac_e > y[1] + c.beta * c.sigma * y[0] * c.sum_contact {
-        corr = y[1];
-    }
-
-    dydt[1] = c.beta * c.sigma * y[0] * c.sum_contact - c.epsilon * y[1] - vac_e - corr;
+    dydt[0] = -c.beta * c.sigma * y[0] * c.sum_contact - vac_s;
+    dydt[1] = c.beta * c.sigma * y[0] * c.sum_contact - c.epsilon * y[1] - vac_e;
     dydt[2] = c.epsilon * c.f_s * y[1] - (c.gamma_s + c.delta) * y[2];
     dydt[3] = c.epsilon * (1. - c.f_s) * y[1] - c.gamma_a * y[3];
     dydt[4] = c.gamma_s * y[2] + c.gamma_a * y[3] + diff_v;
@@ -148,9 +138,10 @@ fn seird_math(_py: Python, m: &PyModule) -> PyResult<()> {
                         let vac_param: f64;
 
                         if vac_params[&("age_grp_".to_string() + &(i + 1).to_string())][1]
-                            <= time_points[t] as f64
-                            && time_points[t] as f64
-                                <= vac_params[&("age_grp_".to_string() + &(i + 1).to_string())][2]
+                            <= time_points[t]
+                            && time_points[t]
+                                < vac_params[&("age_grp_".to_string() + &(i + 1).to_string())][2]
+                                    + 1.0
                         {
                             vac_param = vac_params["eff"][0]
                                 * vac_params[&("age_grp_".to_string() + &(i + 1).to_string())][0];
@@ -167,7 +158,7 @@ fn seird_math(_py: Python, m: &PyModule) -> PyResult<()> {
                             gamma_a: gamma_a[i],
                             delta: delta[i],
                             sum_contact: sum_contact,
-                            vac_params: vac_param * dt,
+                            vac_params: vac_param,
                         };
 
                         let ct = time_points[t];
@@ -194,9 +185,10 @@ fn seird_math(_py: Python, m: &PyModule) -> PyResult<()> {
                         let vac_param: f64;
 
                         if vac_params[&("age_grp_".to_string() + &(i + 1).to_string())][1]
-                            <= time_points[t] as f64
-                            && time_points[t] as f64
-                                <= vac_params[&("age_grp_".to_string() + &(i + 1).to_string())][2]
+                            <= time_points[t]
+                            && time_points[t]
+                                < vac_params[&("age_grp_".to_string() + &(i + 1).to_string())][2]
+                                    + 1.0
                         {
                             vac_param = vac_params["eff"][0]
                                 * vac_params[&("age_grp_".to_string() + &(i + 1).to_string())][0];
@@ -213,7 +205,7 @@ fn seird_math(_py: Python, m: &PyModule) -> PyResult<()> {
                             gamma_a: gamma_a[i],
                             delta: delta[i],
                             sum_contact: sum_contact,
-                            vac_params: vac_param * dt,
+                            vac_params: vac_param,
                         };
 
                         let ct = time_points[t];
