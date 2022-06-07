@@ -243,7 +243,7 @@ def show_param_window():
                     validate_params_vac(vac_parameters)
                 except ValueError:
                     sg.popup_error(
-                        "Vaccination eff must be a value between 0 and 1, rate, start and end parameters must all be non negative, whole numbers.",
+                        "Vaccination eff must be a value between 0 and 1, rate, start and end parameters must all be non negative, whole numbers. Start parameter must also be less than or equal to the end parameter for all age groups.",
                         title="Invalid vaccination parameters",
                         icon=icon,
                     )
@@ -584,6 +584,22 @@ while True:
             fig_agg = draw_fig(
                 window["-CANVAS-"].TKCanvas, fig, window["-TOOLBAR-"].TKCanvas
             )
+            msg = ""
+            for k, v in vac_parameters.items():
+                if k != "eff" and vac_E and v[0]:
+                    indexes = np.where(
+                        y[
+                            1,
+                            np.searchsorted(t, v[1]) : np.searchsorted(t, v[2]),
+                            int(k[-1]) - 1,
+                        ]
+                        == 0
+                    )
+                    if indexes[0].size > 0:
+                        first_zero = t[indexes[0][0]]
+                        msg += f"Age group {k[-1]} fully vaccinated on day: {int(first_zero+v[1])}\n"
+            if msg:
+                sg.popup_ok(msg, title="Vaccination", icon=icon)
         except ValueError as e:
             sg.popup_error(
                 "Invalid parameters: " + str(e), title="Invalid parameters", icon=icon

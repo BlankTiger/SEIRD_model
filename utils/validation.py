@@ -45,6 +45,10 @@ def validate_params_vac(vac_params):
             raise ValueError(
                 "All values like vaccination rate, start day, end day must be positive integers."
             )
+        if vac_params[grp][1] > vac_params[grp][2]:
+            raise ValueError(
+                "Start day must be less than or equal to end day for all age groups."
+            )
         if vac_params[grp][0] < 0 or vac_params[grp][1] < 0 or vac_params[grp][2] < 0:
             raise ValueError(
                 "All values like vaccination rate, start day, end day must be positive numbers."
