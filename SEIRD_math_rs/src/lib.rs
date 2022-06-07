@@ -17,12 +17,15 @@ struct SeirdArgs {
 
 fn seird(_t: f64, y: &Array1<f64>, c: &SeirdArgs) -> Array1<f64> {
     let mut dydt = Array::zeros(6);
-    let diff_v = c.vac_params;
+    let mut diff_v = c.vac_params;
 
     dydt[0] = -c.beta * c.sigma * y[0] * c.sum_contact - diff_v;
     dydt[1] = c.beta * c.sigma * y[0] * c.sum_contact - c.epsilon * y[1];
     dydt[2] = c.epsilon * c.f_s * y[1] - (c.gamma_s + c.delta) * y[2];
     dydt[3] = c.epsilon * (1. - c.f_s) * y[1] - c.gamma_a * y[3];
+    if y[0] <= 1.0 {
+        diff_v = 0.0;
+    }
     dydt[4] = c.gamma_s * y[2] + c.gamma_a * y[3] + diff_v;
     dydt[5] = c.delta * y[2];
     dydt
