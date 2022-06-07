@@ -17,11 +17,7 @@ struct SeirdArgs {
 
 fn seird(_t: f64, y: &Array1<f64>, c: &SeirdArgs) -> Array1<f64> {
     let mut dydt = Array::zeros(6);
-    let mut diff_v = c.vac_params;
-
-    if y[0] - c.beta * c.sigma * y[0] * c.sum_contact - diff_v < 0.0 && diff_v != 0.0 {
-        diff_v = y[0];
-    }
+    let diff_v = c.vac_params;
 
     dydt[0] = -c.beta * c.sigma * y[0] * c.sum_contact - diff_v;
     dydt[1] = c.beta * c.sigma * y[0] * c.sum_contact - c.epsilon * y[1];

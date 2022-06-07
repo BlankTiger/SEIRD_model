@@ -587,15 +587,39 @@ while True:
             msg = ""
             for k, v in vac_parameters.items():
                 if k != "eff" and vac_E and v[0]:
-                    indexes = np.where(
+                    indexes_e = np.where(
                         y[
                             1,
                             np.searchsorted(t, v[1]) : np.searchsorted(t, v[2]),
                             int(k[-1]) - 1,
                         ]
-                        == 0
+                        < 1
                     )
-                    if indexes[0].size > 0:
+                    indexes_s = np.where(
+                        y[
+                            0,
+                            np.searchsorted(t, v[1]) : np.searchsorted(t, v[2]),
+                            int(k[-1]) - 1,
+                        ]
+                        < 1
+                    )
+                    if indexes_s[0].size and indexes_e[0].size:
+                        first_zero = (
+                            t[indexes_e[0][0]]
+                            if indexes_s[0][0] == indexes_e[0][0]
+                            else t[indexes_s[0][0]]
+                        )
+                        msg += f"Age group {k[-1]} fully vaccinated on day: {int(first_zero+v[1])}\n"
+                elif k != "eff" and not vac_E and v[0]:
+                    indexes = np.where(
+                        y[
+                            0,
+                            np.searchsorted(t, v[1]) : np.searchsorted(t, v[2]),
+                            int(k[-1]) - 1,
+                        ]
+                        < v[0] * vac_parameters["eff"][0]
+                    )
+                    if indexes[0].size:
                         first_zero = t[indexes[0][0]]
                         msg += f"Age group {k[-1]} fully vaccinated on day: {int(first_zero+v[1])}\n"
             if msg:
