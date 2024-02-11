@@ -72,11 +72,11 @@ def plot_SEIRD(t, y, screen_size):
             ax[i, j].set_xlabel("Time [days]")
             ax[i, j].set_ylabel("Population")
 
-    plt.text(
-        0.13,
-        0.97,
-        "© M. Urban, J. Jodłowska, J. Balbus, K. Kubica",
-        fontsize=10,
-        transform=plt.gcf().transFigure,
-    )
+    # plt.text(
+    #     0.1,
+    #     0.97,
+    #     "© M. Urban, J. Jodłowska, J. Balbus, K. Kubica",
+    #     fontsize=10,
+    #     transform=plt.gcf().transFigure,
+    # )
     return fig
