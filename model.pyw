@@ -509,7 +509,7 @@ def show_stat_window():
             beta[i]
             * sigma[i]
             * S0[i]
-            * contact[i, i]
+            * contact[i].sum()
             * (fs[i] * gamma_a[i] + (1 - fs[i]) * (delta_n[i] + gamma_s[i]))
         ) / (gamma_a[i] * (gamma_s[i] + delta_n[i]))
         R = np.round(R, 2)

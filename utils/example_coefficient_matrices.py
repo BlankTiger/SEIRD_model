@@ -11,14 +11,14 @@ import numpy as np
 # 6: 60-70
 # 7: 70-
 range_8 = range(8)
-beta_by_age_group = np.array([0.25e-5 for _ in range_8])
-sigma_by_age_group = np.array([1 for _ in range_8])
+beta_by_age_group = np.array([6e-6 for _ in range_8])
+sigma_by_age_group = np.array([1, 1, 1, 1, 1, 1, 0.1, 0.01])
 epsilon_by_age_group = np.array([0.18 for _ in range_8])
 f_s_by_age_group = np.array([0.6 for _ in range_8])
 gamma_s_by_age_group = np.array([0.07 for _ in range_8])
 gamma_a_by_age_group = np.array([0.06 for _ in range_8])
 delta_by_age_group = np.array(
-    [0.0017, 0.0000, 0.007, 0.0012, 0.0031, 0.0105, 0.0459, 0.3253]
+    [2.8e-7, 2e-6, 5e-6, 8.58e-6, 2.22e-5, 7.58e-5, 3.4e-4, 18.7e-4]
 )
 
 sweden_coefficients = np.matrix(
