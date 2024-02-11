@@ -1,0 +1,16 @@
+[project]
+name = "SEIRD_model"
+version = "0.1"
+dependencies = [
+    "auto-py-to-exe",
+    "pyinstaller",
+    "PySimpleGUI",
+    "matplotlib",
+    "patchelf",
+    "maturin",
+    "numpy",
+]
+
+[build-system]
+requires = ["setuptools >= 61.0", "wheel"]
+build-backend = "setuptools.build_meta"
