@@ -6,7 +6,7 @@ dependencies = [
     "pyinstaller",
     "PySimpleGUI",
     "matplotlib",
-    "patchelf",
+    # "patchelf",
     "maturin",
     "numpy",
 ]

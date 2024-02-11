@@ -1,7 +1,9 @@
 venv := env_var("VIRTUAL_ENV")
 
+default:
+    @just --list
+
 clean:
-    #!/usr/bin/env bash
     rm -r ./SEIRD_model.egg-info
     rm -r ./build
     rm -r ./dist

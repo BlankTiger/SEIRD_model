@@ -46,8 +46,6 @@ packaging==23.2
     #   matplotlib
     #   pyinstaller
     #   pyinstaller-hooks-contrib
-patchelf==0.17.2.1
-    # via SEIRD_model (pyproject.toml)
 pillow==10.2.0
     # via matplotlib
 pyinstaller==6.4.0
